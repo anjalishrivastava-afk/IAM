@@ -1,0 +1,3229 @@
+{
+  "base": {
+    "id": "ps-4",
+    "privilegeSetName": "Monitor",
+    "description": "Recording, reports and dashboards",
+    "scopeType": "default",
+    "assignedRoleCount": 3,
+    "createdBy": "Aditya Pratap Singh",
+    "createdAtLabel": "Apr 11, 12:19",
+    "usedByRoleNames": [
+      "Supervisor",
+      "Analyst",
+      "Executive"
+    ]
+  },
+  "longDescription": "Recording, reports and dashboards",
+  "assignedRoleNames": [
+    "Supervisor",
+    "Analyst",
+    "Executive"
+  ],
+  "categories": [
+    {
+      "id": "cat-monitor",
+      "title": "Monitor",
+      "description": "Real-time and operational contact-center visibility",
+      "sidebarCountLabel": 92,
+      "grantedCount": 75,
+      "totalCount": 92,
+      "subgroups": [
+        {
+          "id": "sg-live",
+          "title": "Live monitoring",
+          "description": "Listen / assist on active legs",
+          "grantedCount": 11,
+          "totalCount": 11,
+          "permissions": [
+            {
+              "id": "sg-live-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-1",
+              "label": "Snoop",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-2",
+              "label": "Whisper",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-3",
+              "label": "Barge",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-4",
+              "label": "Take over",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-5",
+              "label": "Force disconnect",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-6",
+              "label": "View metadata",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-7",
+              "label": "Tag moment",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-8",
+              "label": "Download clip",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-9",
+              "label": "Share snapshot",
+              "granted": true
+            },
+            {
+              "id": "sg-live-p-10",
+              "label": "Mask audio",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-agent",
+          "title": "Agent monitoring",
+          "description": "State, occupancy, and timeline",
+          "grantedCount": 9,
+          "totalCount": 9,
+          "permissions": [
+            {
+              "id": "sg-agent-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-1",
+              "label": "List agents",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-2",
+              "label": "Filter",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-3",
+              "label": "Export snapshot",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-4",
+              "label": "Nudge",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-5",
+              "label": "Reassign",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-6",
+              "label": "View aux codes",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-7",
+              "label": "View timeline",
+              "granted": true
+            },
+            {
+              "id": "sg-agent-p-8",
+              "label": "Alert on breach",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-queue",
+          "title": "Queue monitoring",
+          "description": "Waits, SLA, abandons, callbacks",
+          "grantedCount": 6,
+          "totalCount": 8,
+          "permissions": [
+            {
+              "id": "sg-queue-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-queue-p-1",
+              "label": "Drill in",
+              "granted": true
+            },
+            {
+              "id": "sg-queue-p-2",
+              "label": "Set threshold",
+              "granted": true
+            },
+            {
+              "id": "sg-queue-p-3",
+              "label": "Rebalance",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-queue-p-4",
+              "label": "View forecast",
+              "granted": true
+            },
+            {
+              "id": "sg-queue-p-5",
+              "label": "Abandonment detail",
+              "granted": true
+            },
+            {
+              "id": "sg-queue-p-6",
+              "label": "Callback list",
+              "granted": true
+            },
+            {
+              "id": "sg-queue-p-7",
+              "label": "Override routing",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-manual",
+          "title": "Manual review sessions",
+          "description": "User-initiated monitoring sessions and notes",
+          "grantedCount": 7,
+          "totalCount": 9,
+          "permissions": [
+            {
+              "id": "sg-manual-p-0",
+              "label": "Create",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-1",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-2",
+              "label": "Edit",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-3",
+              "label": "Delete",
+              "granted": false
+            },
+            {
+              "id": "sg-manual-p-4",
+              "label": "Add note",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-5",
+              "label": "Close session",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-6",
+              "label": "Reopen",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-7",
+              "label": "Assign reviewer",
+              "granted": true
+            },
+            {
+              "id": "sg-manual-p-8",
+              "label": "Lock session",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-incident",
+          "title": "Incident response",
+          "description": "Escalations tied to live operations",
+          "grantedCount": 6,
+          "totalCount": 8,
+          "permissions": [
+            {
+              "id": "sg-incident-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-incident-p-1",
+              "label": "Create ticket",
+              "granted": true
+            },
+            {
+              "id": "sg-incident-p-2",
+              "label": "Assign owner",
+              "granted": true
+            },
+            {
+              "id": "sg-incident-p-3",
+              "label": "Snooze",
+              "granted": true
+            },
+            {
+              "id": "sg-incident-p-4",
+              "label": "Resolve",
+              "granted": false
+            },
+            {
+              "id": "sg-incident-p-5",
+              "label": "Post-mortem link",
+              "granted": true
+            },
+            {
+              "id": "sg-incident-p-6",
+              "label": "Notify leadership",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-incident-p-7",
+              "label": "Archive",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-wfm",
+          "title": "Workforce views",
+          "description": "Real-time adherence and staffing",
+          "grantedCount": 8,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-wfm-p-0",
+              "label": "View schedule",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-1",
+              "label": "Compare plan",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-2",
+              "label": "Shift swap approve",
+              "granted": false
+            },
+            {
+              "id": "sg-wfm-p-3",
+              "label": "Overtime offer",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-4",
+              "label": "Break override",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-wfm-p-5",
+              "label": "Team rollup",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-6",
+              "label": "Export CSV",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-7",
+              "label": "Alert roster gap",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-8",
+              "label": "Capacity hint",
+              "granted": true
+            },
+            {
+              "id": "sg-wfm-p-9",
+              "label": "Skill mix view",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-ops",
+          "title": "Operational dashboards",
+          "description": "Tiles and drill paths for ops leaders",
+          "grantedCount": 9,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-ops-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-1",
+              "label": "Configure layout",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-2",
+              "label": "Share link",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-3",
+              "label": "Schedule snapshot",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-4",
+              "label": "Embed in wallboard",
+              "granted": false
+            },
+            {
+              "id": "sg-ops-p-5",
+              "label": "Drill to detail",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-6",
+              "label": "Compare interval",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-7",
+              "label": "Annotate",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-8",
+              "label": "Threshold alert",
+              "granted": true
+            },
+            {
+              "id": "sg-ops-p-9",
+              "label": "Mute tile",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-media",
+          "title": "Media compliance",
+          "description": "Recording access and redaction",
+          "grantedCount": 5,
+          "totalCount": 9,
+          "permissions": [
+            {
+              "id": "sg-media-p-0",
+              "label": "Play",
+              "granted": true
+            },
+            {
+              "id": "sg-media-p-1",
+              "label": "Download",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-media-p-2",
+              "label": "Redact PII",
+              "granted": false
+            },
+            {
+              "id": "sg-media-p-3",
+              "label": "Chain of custody",
+              "granted": true
+            },
+            {
+              "id": "sg-media-p-4",
+              "label": "Legal hold",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-media-p-5",
+              "label": "Share internally",
+              "granted": true
+            },
+            {
+              "id": "sg-media-p-6",
+              "label": "Retention tag",
+              "granted": true
+            },
+            {
+              "id": "sg-media-p-7",
+              "label": "Parental dual consent",
+              "granted": false
+            },
+            {
+              "id": "sg-media-p-8",
+              "label": "Redaction template",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-mon-dial",
+          "title": "Dialer oversight",
+          "description": "Outbound campaign health without agent takeover",
+          "grantedCount": 8,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-mon-dial-p-0",
+              "label": "View campaign KPIs",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-1",
+              "label": "Preview list sample",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-2",
+              "label": "Pacing graph",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-3",
+              "label": "Abandon rate drill",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-4",
+              "label": "TCPA window check",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-5",
+              "label": "List freeze request",
+              "granted": false
+            },
+            {
+              "id": "sg-mon-dial-p-6",
+              "label": "Blacklist override",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-mon-dial-p-7",
+              "label": "AMD tuning view",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-8",
+              "label": "Retry policy read",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-dial-p-9",
+              "label": "Timezone compliance",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-mon-ivr",
+          "title": "IVR & call paths",
+          "description": "Traffic, hotspots, failover without editor write",
+          "grantedCount": 6,
+          "totalCount": 8,
+          "permissions": [
+            {
+              "id": "sg-mon-ivr-p-0",
+              "label": "Node heatmap",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-ivr-p-1",
+              "label": "Drop-off funnel",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-ivr-p-2",
+              "label": "DTMF path trace",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-ivr-p-3",
+              "label": "Queue exit volume",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-ivr-p-4",
+              "label": "After-hours branch",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-ivr-p-5",
+              "label": "Open editor",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-mon-ivr-p-6",
+              "label": "Version compare",
+              "granted": true
+            },
+            {
+              "id": "sg-mon-ivr-p-7",
+              "label": "Rollback request",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-voice",
+      "title": "Voice & telephony",
+      "description": "Carriers, numbering, SIP profiles, and voice policies for enterprise PBX / CCaaS",
+      "sidebarCountLabel": 37,
+      "grantedCount": 20,
+      "totalCount": 37,
+      "subgroups": [
+        {
+          "id": "sg-v-num",
+          "title": "Numbers & DIDs",
+          "description": "Inventory, portability, and billing ownership",
+          "grantedCount": 5,
+          "totalCount": 9,
+          "permissions": [
+            {
+              "id": "sg-v-num-p-0",
+              "label": "View inventory",
+              "granted": true
+            },
+            {
+              "id": "sg-v-num-p-1",
+              "label": "Order DID",
+              "granted": true
+            },
+            {
+              "id": "sg-v-num-p-2",
+              "label": "Port request",
+              "granted": false
+            },
+            {
+              "id": "sg-v-num-p-3",
+              "label": "Emergency address",
+              "granted": true
+            },
+            {
+              "id": "sg-v-num-p-4",
+              "label": "CNAM override",
+              "granted": false
+            },
+            {
+              "id": "sg-v-num-p-5",
+              "label": "Toll-free steering",
+              "granted": true
+            },
+            {
+              "id": "sg-v-num-p-6",
+              "label": "Region lock",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-v-num-p-7",
+              "label": "Usage chargeback",
+              "granted": true
+            },
+            {
+              "id": "sg-v-num-p-8",
+              "label": "Release number",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-v-sip",
+          "title": "SIP & carriers",
+          "description": "Trunks, auth, codec, and failure domains",
+          "grantedCount": 4,
+          "totalCount": 9,
+          "permissions": [
+            {
+              "id": "sg-v-sip-p-0",
+              "label": "View trunk",
+              "granted": true
+            },
+            {
+              "id": "sg-v-sip-p-1",
+              "label": "Create trunk",
+              "granted": false
+            },
+            {
+              "id": "sg-v-sip-p-2",
+              "label": "IP allowlist edit",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-v-sip-p-3",
+              "label": "SBC profile",
+              "granted": true
+            },
+            {
+              "id": "sg-v-sip-p-4",
+              "label": "OPTIONS probe",
+              "granted": true
+            },
+            {
+              "id": "sg-v-sip-p-5",
+              "label": "Failover ladder",
+              "granted": true
+            },
+            {
+              "id": "sg-v-sip-p-6",
+              "label": "Media bypass",
+              "granted": false
+            },
+            {
+              "id": "sg-v-sip-p-7",
+              "label": "Packet capture request",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-v-sip-p-8",
+              "label": "BYOC switch",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-v-route",
+          "title": "Inbound routing",
+          "description": "DNIS, geo, time-of-day, skills",
+          "grantedCount": 4,
+          "totalCount": 7,
+          "permissions": [
+            {
+              "id": "sg-v-route-p-0",
+              "label": "View DNIS map",
+              "granted": true
+            },
+            {
+              "id": "sg-v-route-p-1",
+              "label": "Edit entry point",
+              "granted": false
+            },
+            {
+              "id": "sg-v-route-p-2",
+              "label": "Geo policy",
+              "granted": true
+            },
+            {
+              "id": "sg-v-route-p-3",
+              "label": "Holiday schedule",
+              "granted": true
+            },
+            {
+              "id": "sg-v-route-p-4",
+              "label": "Overflow chain",
+              "granted": true
+            },
+            {
+              "id": "sg-v-route-p-5",
+              "label": "VIP route",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-v-route-p-6",
+              "label": "DR warm standby",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-v-outpol",
+          "title": "Outbound policy",
+          "description": "ANI, STIR/SHAKEN, local presence",
+          "grantedCount": 3,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-v-outpol-p-0",
+              "label": "ANI pool view",
+              "granted": true
+            },
+            {
+              "id": "sg-v-outpol-p-1",
+              "label": "Edit ANI policy",
+              "granted": false
+            },
+            {
+              "id": "sg-v-outpol-p-2",
+              "label": "Attestation tier",
+              "granted": true
+            },
+            {
+              "id": "sg-v-outpol-p-3",
+              "label": "Branded call",
+              "granted": false
+            },
+            {
+              "id": "sg-v-outpol-p-4",
+              "label": "Stir trace",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-v-vm",
+          "title": "Voicemail & prompts",
+          "description": "Greetings, languages, TTS",
+          "grantedCount": 3,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-v-vm-p-0",
+              "label": "Listen",
+              "granted": true
+            },
+            {
+              "id": "sg-v-vm-p-1",
+              "label": "Upload prompt",
+              "granted": true
+            },
+            {
+              "id": "sg-v-vm-p-2",
+              "label": "TTS synth",
+              "granted": true
+            },
+            {
+              "id": "sg-v-vm-p-3",
+              "label": "Delete prompt",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-v-emer",
+          "title": "Emergency & E911",
+          "description": "PSAP mapping and test calls",
+          "grantedCount": 1,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-v-emer-p-0",
+              "label": "View location",
+              "granted": true
+            },
+            {
+              "id": "sg-v-emer-p-1",
+              "label": "Test call",
+              "granted": false
+            },
+            {
+              "id": "sg-v-emer-p-2",
+              "label": "Migrate address",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-omni",
+      "title": "Omnichannel",
+      "description": "Email, messaging, chat, and social workspaces alongside voice",
+      "sidebarCountLabel": 26,
+      "grantedCount": 12,
+      "totalCount": 26,
+      "subgroups": [
+        {
+          "id": "sg-o-email",
+          "title": "Email queues",
+          "description": "Skills, SLA, threading, disclaimers",
+          "grantedCount": 4,
+          "totalCount": 6,
+          "permissions": [
+            {
+              "id": "sg-o-email-p-0",
+              "label": "Assign mailbox",
+              "granted": true
+            },
+            {
+              "id": "sg-o-email-p-1",
+              "label": "Edit routing rule",
+              "granted": false
+            },
+            {
+              "id": "sg-o-email-p-2",
+              "label": "Template library",
+              "granted": true
+            },
+            {
+              "id": "sg-o-email-p-3",
+              "label": "HTML sanitizer bypass",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-o-email-p-4",
+              "label": "Auto-reply windows",
+              "granted": true
+            },
+            {
+              "id": "sg-o-email-p-5",
+              "label": "PII masking preview",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-o-chat",
+          "title": "Live chat & cobrowse",
+          "description": "Web widget, escalation, transcripts",
+          "grantedCount": 3,
+          "totalCount": 6,
+          "permissions": [
+            {
+              "id": "sg-o-chat-p-0",
+              "label": "Inject script",
+              "granted": false
+            },
+            {
+              "id": "sg-o-chat-p-1",
+              "label": "Cobrowse approve",
+              "granted": false
+            },
+            {
+              "id": "sg-o-chat-p-2",
+              "label": "Queue priority",
+              "granted": true
+            },
+            {
+              "id": "sg-o-chat-p-3",
+              "label": "Transcript export",
+              "granted": true
+            },
+            {
+              "id": "sg-o-chat-p-4",
+              "label": "Proactive invite",
+              "granted": false
+            },
+            {
+              "id": "sg-o-chat-p-5",
+              "label": "Session idle policy",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-o-msg",
+          "title": "Messaging apps",
+          "description": "WhatsApp Business, SMS,RCS",
+          "grantedCount": 2,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-o-msg-p-0",
+              "label": "Template submit",
+              "granted": false
+            },
+            {
+              "id": "sg-o-msg-p-1",
+              "label": "Opt keyword list",
+              "granted": true
+            },
+            {
+              "id": "sg-o-msg-p-2",
+              "label": "Media OCR",
+              "granted": false
+            },
+            {
+              "id": "sg-o-msg-p-3",
+              "label": "Session handoff voice",
+              "granted": true
+            },
+            {
+              "id": "sg-o-msg-p-4",
+              "label": "Bulk broadcast",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-o-soc",
+          "title": "Social & reviews",
+          "description": "Public channel moderation",
+          "grantedCount": 2,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-o-soc-p-0",
+              "label": "View threads",
+              "granted": true
+            },
+            {
+              "id": "sg-o-soc-p-1",
+              "label": "Reply approve",
+              "granted": false
+            },
+            {
+              "id": "sg-o-soc-p-2",
+              "label": "Hide comment",
+              "granted": false
+            },
+            {
+              "id": "sg-o-soc-p-3",
+              "label": "Sentiment rollup",
+              "granted": true
+            },
+            {
+              "id": "sg-o-soc-p-4",
+              "label": "Escalate legal",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-o-async",
+          "title": "Asynchronous ticketing",
+          "description": "Backlog, merge, SLA clock",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-o-async-p-0",
+              "label": "Merge tickets",
+              "granted": false
+            },
+            {
+              "id": "sg-o-async-p-1",
+              "label": "Split ticket",
+              "granted": false
+            },
+            {
+              "id": "sg-o-async-p-2",
+              "label": "SLA breach override",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-o-async-p-3",
+              "label": "Bulk reassign",
+              "granted": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-reporting",
+      "title": "Reporting",
+      "description": "Scheduled, ad-hoc, and governed exports for stakeholders",
+      "sidebarCountLabel": 43,
+      "grantedCount": 28,
+      "totalCount": 43,
+      "subgroups": [
+        {
+          "id": "sg-rep-std",
+          "title": "Standard reports",
+          "description": "Curated library and PDF scheduling",
+          "grantedCount": 9,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-rep-std-p-0",
+              "label": "View library",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-1",
+              "label": "Run on demand",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-2",
+              "label": "Schedule email",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-3",
+              "label": "Share template",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-4",
+              "label": "Clone",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-5",
+              "label": "Archive run",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-6",
+              "label": "Compare periods",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-7",
+              "label": "Drill to detail",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-8",
+              "label": "Watermark",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-std-p-9",
+              "label": "Brand theme",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-rep-cust",
+          "title": "Custom reports",
+          "description": "Builder, SQL, and governed fields",
+          "grantedCount": 5,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-rep-cust-p-0",
+              "label": "Create",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cust-p-1",
+              "label": "Edit",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cust-p-2",
+              "label": "Delete",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-cust-p-3",
+              "label": "SQL mode",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-rep-cust-p-4",
+              "label": "Join datasets",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-cust-p-5",
+              "label": "Preview",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cust-p-6",
+              "label": "Validate",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cust-p-7",
+              "label": "Publish",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-cust-p-8",
+              "label": "Version history",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cust-p-9",
+              "label": "Rollback",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-rep-dash",
+          "title": "Dashboards & KPIs",
+          "description": "Executive and team scorecards",
+          "grantedCount": 7,
+          "totalCount": 8,
+          "permissions": [
+            {
+              "id": "sg-rep-dash-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-1",
+              "label": "Edit layout",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-2",
+              "label": "Set target",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-3",
+              "label": "Alert on miss",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-4",
+              "label": "Embed",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-5",
+              "label": "TV mode",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-6",
+              "label": "Export PNG",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-dash-p-7",
+              "label": "Share public link",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-rep-audit",
+          "title": "Audit trail",
+          "description": "Who ran what and data lineage",
+          "grantedCount": 3,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-rep-audit-p-0",
+              "label": "View runs",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-audit-p-1",
+              "label": "Filter user",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-audit-p-2",
+              "label": "Export log",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-audit-p-3",
+              "label": "Immutable proof",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-rep-reg",
+          "title": "Regulatory packs",
+          "description": "SOX / HIPAA appendix exports",
+          "grantedCount": 1,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-rep-reg-p-0",
+              "label": "SOX attest pack",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-reg-p-1",
+              "label": "HIPAA BAA appendix",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-rep-reg-p-2",
+              "label": "PCI redacted extract",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-reg-p-3",
+              "label": "Country filter",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-reg-p-4",
+              "label": "Archive to vault",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-rep-cdp",
+          "title": "Data warehouse feeds",
+          "description": "ETL jobs and freshness SLAs",
+          "grantedCount": 3,
+          "totalCount": 6,
+          "permissions": [
+            {
+              "id": "sg-rep-cdp-p-0",
+              "label": "View jobs",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cdp-p-1",
+              "label": "Pause job",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-rep-cdp-p-2",
+              "label": "Schema map",
+              "granted": true
+            },
+            {
+              "id": "sg-rep-cdp-p-3",
+              "label": "PII hashing mode",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-cdp-p-4",
+              "label": "Backfill rerun",
+              "granted": false
+            },
+            {
+              "id": "sg-rep-cdp-p-5",
+              "label": "SLA alert hook",
+              "granted": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-notifications",
+      "title": "Notifications",
+      "description": "In-app, email, SMS, and webhook delivery with throttles",
+      "sidebarCountLabel": 32,
+      "grantedCount": 21,
+      "totalCount": 32,
+      "subgroups": [
+        {
+          "id": "sg-n-ch",
+          "title": "Channels",
+          "description": "Where alerts may be delivered",
+          "grantedCount": 5,
+          "totalCount": 7,
+          "permissions": [
+            {
+              "id": "sg-n-ch-p-0",
+              "label": "In-app",
+              "granted": true
+            },
+            {
+              "id": "sg-n-ch-p-1",
+              "label": "Email",
+              "granted": true
+            },
+            {
+              "id": "sg-n-ch-p-2",
+              "label": "SMS",
+              "granted": true
+            },
+            {
+              "id": "sg-n-ch-p-3",
+              "label": "Teams",
+              "granted": true
+            },
+            {
+              "id": "sg-n-ch-p-4",
+              "label": "Slack",
+              "granted": true
+            },
+            {
+              "id": "sg-n-ch-p-5",
+              "label": "Webhook",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-n-ch-p-6",
+              "label": "Pager",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-n-rule",
+          "title": "Rules & routing",
+          "description": "Policies, filters, quiet hours",
+          "grantedCount": 7,
+          "totalCount": 8,
+          "permissions": [
+            {
+              "id": "sg-n-rule-p-0",
+              "label": "Create rule",
+              "granted": true
+            },
+            {
+              "id": "sg-n-rule-p-1",
+              "label": "Edit priority",
+              "granted": true
+            },
+            {
+              "id": "sg-n-rule-p-2",
+              "label": "Mute topic",
+              "granted": true
+            },
+            {
+              "id": "sg-n-rule-p-3",
+              "label": "Escalation path",
+              "granted": false
+            },
+            {
+              "id": "sg-n-rule-p-4",
+              "label": "Rate limit",
+              "granted": true
+            },
+            {
+              "id": "sg-n-rule-p-5",
+              "label": "Digest bundle",
+              "granted": true
+            },
+            {
+              "id": "sg-n-rule-p-6",
+              "label": "Test send",
+              "granted": true
+            },
+            {
+              "id": "sg-n-rule-p-7",
+              "label": "Copy rule",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-n-tpl",
+          "title": "Templates",
+          "description": "Locales, placeholders, approvals",
+          "grantedCount": 3,
+          "totalCount": 6,
+          "permissions": [
+            {
+              "id": "sg-n-tpl-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-n-tpl-p-1",
+              "label": "Edit HTML",
+              "granted": false
+            },
+            {
+              "id": "sg-n-tpl-p-2",
+              "label": "Plain text fallback",
+              "granted": true
+            },
+            {
+              "id": "sg-n-tpl-p-3",
+              "label": "Locale add",
+              "granted": false
+            },
+            {
+              "id": "sg-n-tpl-p-4",
+              "label": "Preview",
+              "granted": true
+            },
+            {
+              "id": "sg-n-tpl-p-5",
+              "label": "Approve publish",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-n-sys",
+          "title": "System events",
+          "description": "Platform health and integration alerts",
+          "grantedCount": 4,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-n-sys-p-0",
+              "label": "Outage banner",
+              "granted": true
+            },
+            {
+              "id": "sg-n-sys-p-1",
+              "label": "API latency",
+              "granted": true
+            },
+            {
+              "id": "sg-n-sys-p-2",
+              "label": "Queue backlog",
+              "granted": true
+            },
+            {
+              "id": "sg-n-sys-p-3",
+              "label": "License warning",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-n-sla",
+          "title": "SLA & escalation",
+          "description": "Customer escalation chains",
+          "grantedCount": 2,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-n-sla-p-0",
+              "label": "View chain",
+              "granted": true
+            },
+            {
+              "id": "sg-n-sla-p-1",
+              "label": "Edit escalation",
+              "granted": false
+            },
+            {
+              "id": "sg-n-sla-p-2",
+              "label": "On-call roster",
+              "granted": true
+            },
+            {
+              "id": "sg-n-sla-p-3",
+              "label": "Page bridge",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-n-ai",
+          "title": "AI summarisation",
+          "description": "Post-call/email digests",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-n-ai-p-0",
+              "label": "Summarize to supervisor",
+              "granted": false
+            },
+            {
+              "id": "sg-n-ai-p-1",
+              "label": "PII-aware redact",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-n-ai-p-2",
+              "label": "Feedback tone",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-audience",
+      "title": "Audience",
+      "description": "Segments, eligibility, suppression, and outreach consent",
+      "sidebarCountLabel": 32,
+      "grantedCount": 18,
+      "totalCount": 32,
+      "subgroups": [
+        {
+          "id": "sg-a-seg",
+          "title": "Segments",
+          "description": "Build and refresh audience definitions",
+          "grantedCount": 6,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-a-seg-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-a-seg-p-1",
+              "label": "Create",
+              "granted": true
+            },
+            {
+              "id": "sg-a-seg-p-2",
+              "label": "Edit criteria",
+              "granted": true
+            },
+            {
+              "id": "sg-a-seg-p-3",
+              "label": "Refresh sample",
+              "granted": true
+            },
+            {
+              "id": "sg-a-seg-p-4",
+              "label": "Schedule sync",
+              "granted": false
+            },
+            {
+              "id": "sg-a-seg-p-5",
+              "label": "Export members",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-a-seg-p-6",
+              "label": "Clone",
+              "granted": true
+            },
+            {
+              "id": "sg-a-seg-p-7",
+              "label": "Archive",
+              "granted": false
+            },
+            {
+              "id": "sg-a-seg-p-8",
+              "label": "Share segment",
+              "granted": true
+            },
+            {
+              "id": "sg-a-seg-p-9",
+              "label": "Version diff",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-a-sup",
+          "title": "Suppression lists",
+          "description": "DNC / opt-outs and compliance holds",
+          "grantedCount": 4,
+          "totalCount": 6,
+          "permissions": [
+            {
+              "id": "sg-a-sup-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-a-sup-p-1",
+              "label": "Add entry",
+              "granted": true
+            },
+            {
+              "id": "sg-a-sup-p-2",
+              "label": "Bulk upload",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-a-sup-p-3",
+              "label": "Remove",
+              "granted": false
+            },
+            {
+              "id": "sg-a-sup-p-4",
+              "label": "Audit reason",
+              "granted": true
+            },
+            {
+              "id": "sg-a-sup-p-5",
+              "label": "Expire rule",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-a-con",
+          "title": "Consent & preferences",
+          "description": "Channel and purpose-level consent",
+          "grantedCount": 4,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-a-con-p-0",
+              "label": "Read profile",
+              "granted": true
+            },
+            {
+              "id": "sg-a-con-p-1",
+              "label": "Update prefs",
+              "granted": true
+            },
+            {
+              "id": "sg-a-con-p-2",
+              "label": "Prove consent",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-a-con-p-3",
+              "label": "Double opt-in",
+              "granted": true
+            },
+            {
+              "id": "sg-a-con-p-4",
+              "label": "Resubscribe flow",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-a-lal",
+          "title": "Lookalike / overlap",
+          "description": "Advanced audience expansion",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-a-lal-p-0",
+              "label": "Run overlap",
+              "granted": false
+            },
+            {
+              "id": "sg-a-lal-p-1",
+              "label": "Seed upload",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-a-lal-p-2",
+              "label": "Similarity score",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-a-ent",
+          "title": "Accounts & hierarchy",
+          "description": "Enterprise org / subaccounts",
+          "grantedCount": 3,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-a-ent-p-0",
+              "label": "Roll up spend",
+              "granted": true
+            },
+            {
+              "id": "sg-a-ent-p-1",
+              "label": "Parent override",
+              "granted": false
+            },
+            {
+              "id": "sg-a-ent-p-2",
+              "label": "Site ID tag",
+              "granted": true
+            },
+            {
+              "id": "sg-a-ent-p-3",
+              "label": "Contract tier",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-a-tm",
+          "title": "Timezone & reachability",
+          "description": "Best time to call / quiet hours",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-a-tm-p-0",
+              "label": "Local time window",
+              "granted": true
+            },
+            {
+              "id": "sg-a-tm-p-1",
+              "label": "Override holiday",
+              "granted": false
+            },
+            {
+              "id": "sg-a-tm-p-2",
+              "label": "Sunset campaign",
+              "granted": false
+            },
+            {
+              "id": "sg-a-tm-p-3",
+              "label": "Channel preference infer",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-content",
+      "title": "Content",
+      "description": "Scripts, snippets, knowledge articles, and media libraries",
+      "sidebarCountLabel": 36,
+      "grantedCount": 20,
+      "totalCount": 36,
+      "subgroups": [
+        {
+          "id": "sg-c-lib",
+          "title": "Libraries",
+          "description": "Folders, tags, and lifecycle",
+          "grantedCount": 7,
+          "totalCount": 10,
+          "permissions": [
+            {
+              "id": "sg-c-lib-p-0",
+              "label": "Browse",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-1",
+              "label": "Upload",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-2",
+              "label": "Move",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-3",
+              "label": "Delete",
+              "granted": false
+            },
+            {
+              "id": "sg-c-lib-p-4",
+              "label": "Tag",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-5",
+              "label": "Approve publish",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-c-lib-p-6",
+              "label": "Lock version",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-7",
+              "label": "Compare versions",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-8",
+              "label": "Share link",
+              "granted": true
+            },
+            {
+              "id": "sg-c-lib-p-9",
+              "label": "Download original",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-c-art",
+          "title": "Articles & macros",
+          "description": "Agent-facing quick answers",
+          "grantedCount": 6,
+          "totalCount": 7,
+          "permissions": [
+            {
+              "id": "sg-c-art-p-0",
+              "label": "View",
+              "granted": true
+            },
+            {
+              "id": "sg-c-art-p-1",
+              "label": "Create",
+              "granted": true
+            },
+            {
+              "id": "sg-c-art-p-2",
+              "label": "Edit",
+              "granted": true
+            },
+            {
+              "id": "sg-c-art-p-3",
+              "label": "Deprecate",
+              "granted": false
+            },
+            {
+              "id": "sg-c-art-p-4",
+              "label": "Usage stats",
+              "granted": true
+            },
+            {
+              "id": "sg-c-art-p-5",
+              "label": "Feedback loop",
+              "granted": true
+            },
+            {
+              "id": "sg-c-art-p-6",
+              "label": "Pin to queue",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-c-media",
+          "title": "Media assets",
+          "description": "Prompts, legal disclaimers, audio",
+          "grantedCount": 2,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-c-media-p-0",
+              "label": "Play preview",
+              "granted": true
+            },
+            {
+              "id": "sg-c-media-p-1",
+              "label": "Replace asset",
+              "granted": false
+            },
+            {
+              "id": "sg-c-media-p-2",
+              "label": "Transcode",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-c-media-p-3",
+              "label": "Attach to campaign",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-c-loc",
+          "title": "Localization",
+          "description": "Locales and review workflow",
+          "grantedCount": 1,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-c-loc-p-0",
+              "label": "Add locale",
+              "granted": false
+            },
+            {
+              "id": "sg-c-loc-p-1",
+              "label": "Translate task",
+              "granted": true
+            },
+            {
+              "id": "sg-c-loc-p-2",
+              "label": "Review approve",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-c-voice-bot",
+          "title": "Conversational design",
+          "description": "Intents & dialog policies",
+          "grantedCount": 2,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-c-voice-bot-p-0",
+              "label": "Edit intent graph",
+              "granted": false
+            },
+            {
+              "id": "sg-c-voice-bot-p-1",
+              "label": "Entity registry",
+              "granted": false
+            },
+            {
+              "id": "sg-c-voice-bot-p-2",
+              "label": "Handoff thresholds",
+              "granted": true
+            },
+            {
+              "id": "sg-c-voice-bot-p-3",
+              "label": "Abandon intent log",
+              "granted": true
+            },
+            {
+              "id": "sg-c-voice-bot-p-4",
+              "label": "LLM grounding policy",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-c-coach",
+          "title": "Coaching overlays",
+          "description": "In-panel coaching tips",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-c-coach-p-0",
+              "label": "Embed tip",
+              "granted": true
+            },
+            {
+              "id": "sg-c-coach-p-1",
+              "label": "A/B script branch",
+              "granted": false
+            },
+            {
+              "id": "sg-c-coach-p-2",
+              "label": "Risk phrase highlight",
+              "granted": false
+            },
+            {
+              "id": "sg-c-coach-p-3",
+              "label": "Competitor mention watch",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-c-comply",
+          "title": "Disclosure snippets",
+          "description": "Regulatory disclaimers per region",
+          "grantedCount": 1,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-c-comply-p-0",
+              "label": "Approve legal text",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-c-comply-p-1",
+              "label": "Attach to DNIS",
+              "granted": false
+            },
+            {
+              "id": "sg-c-comply-p-2",
+              "label": "Preview play order",
+              "granted": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-engagement",
+      "title": "Engagement & campaigns",
+      "description": "Outbound dialing, nurture journeys, and journey experimentation",
+      "sidebarCountLabel": 20,
+      "grantedCount": 9,
+      "totalCount": 20,
+      "subgroups": [
+        {
+          "id": "sg-e-prv",
+          "title": "Campaign preview",
+          "description": "Draft states and stakeholder sign-off",
+          "grantedCount": 2,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-e-prv-p-0",
+              "label": "View drafts",
+              "granted": true
+            },
+            {
+              "id": "sg-e-prv-p-1",
+              "label": "Submit review",
+              "granted": false
+            },
+            {
+              "id": "sg-e-prv-p-2",
+              "label": "Stakeholder annotate",
+              "granted": true
+            },
+            {
+              "id": "sg-e-prv-p-3",
+              "label": "Promote staging",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-e-seq",
+          "title": "Journey sequencer",
+          "description": "Multi-step flows across channels",
+          "grantedCount": 2,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-e-seq-p-0",
+              "label": "Fork on reply",
+              "granted": false
+            },
+            {
+              "id": "sg-e-seq-p-1",
+              "label": "A/B throttle",
+              "granted": false
+            },
+            {
+              "id": "sg-e-seq-p-2",
+              "label": "Exit criterion",
+              "granted": true
+            },
+            {
+              "id": "sg-e-seq-p-3",
+              "label": "Delay node",
+              "granted": true
+            },
+            {
+              "id": "sg-e-seq-p-4",
+              "label": "Human approval gate",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-e-ob",
+          "title": "Outbound lists",
+          "description": "List hygiene & rotation",
+          "grantedCount": 3,
+          "totalCount": 7,
+          "permissions": [
+            {
+              "id": "sg-e-ob-p-0",
+              "label": "View list health",
+              "granted": true
+            },
+            {
+              "id": "sg-e-ob-p-1",
+              "label": "Refresh from CRM",
+              "granted": false
+            },
+            {
+              "id": "sg-e-ob-p-2",
+              "label": "Cap daily attempts",
+              "granted": false
+            },
+            {
+              "id": "sg-e-ob-p-3",
+              "label": "Prioritize warm",
+              "granted": true
+            },
+            {
+              "id": "sg-e-ob-p-4",
+              "label": "Randomize order",
+              "granted": false
+            },
+            {
+              "id": "sg-e-ob-p-5",
+              "label": "Export sample",
+              "granted": true
+            },
+            {
+              "id": "sg-e-ob-p-6",
+              "label": "DNC reconcile",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-e-inb",
+          "title": "Inbound capture",
+          "description": "Web-to-queue, missed-call recovery",
+          "grantedCount": 2,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-e-inb-p-0",
+              "label": "Callback promise",
+              "granted": true
+            },
+            {
+              "id": "sg-e-inb-p-1",
+              "label": "Form-to-case",
+              "granted": false
+            },
+            {
+              "id": "sg-e-inb-p-2",
+              "label": "Abandon salvage",
+              "granted": true
+            },
+            {
+              "id": "sg-e-inb-p-3",
+              "label": "SLA pledge text",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-wfm",
+      "title": "Workforce optimization",
+      "description": "Forecasting, scheduling, adherence, and intraday re-planning",
+      "sidebarCountLabel": 21,
+      "grantedCount": 6,
+      "totalCount": 21,
+      "subgroups": [
+        {
+          "id": "sg-w-sch",
+          "title": "Scheduling",
+          "description": "Patterns, rotations, swaps",
+          "grantedCount": 2,
+          "totalCount": 6,
+          "permissions": [
+            {
+              "id": "sg-w-sch-p-0",
+              "label": "Publish schedule",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-w-sch-p-1",
+              "label": "Edit shift swap",
+              "granted": false
+            },
+            {
+              "id": "sg-w-sch-p-2",
+              "label": "Overtime accept",
+              "granted": true
+            },
+            {
+              "id": "sg-w-sch-p-3",
+              "label": "PTO blackout",
+              "granted": false
+            },
+            {
+              "id": "sg-w-sch-p-4",
+              "label": "Skill staffing rule",
+              "granted": false
+            },
+            {
+              "id": "sg-w-sch-p-5",
+              "label": "View heatmap gap",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-w-fc",
+          "title": "Forecasting",
+          "description": "Queues, Erlang overlays, uplift",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-w-fc-p-0",
+              "label": "View forecast",
+              "granted": true
+            },
+            {
+              "id": "sg-w-fc-p-1",
+              "label": "Edit uplift factor",
+              "granted": false
+            },
+            {
+              "id": "sg-w-fc-p-2",
+              "label": "Import history",
+              "granted": false
+            },
+            {
+              "id": "sg-w-fc-p-3",
+              "label": "What-if model",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-w-adh",
+          "title": "Adherence",
+          "description": "Exceptions, grace, coaching notes",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-w-adh-p-0",
+              "label": "View exceptions",
+              "granted": true
+            },
+            {
+              "id": "sg-w-adh-p-1",
+              "label": "Override exception",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-w-adh-p-2",
+              "label": "Coaching memo",
+              "granted": false
+            },
+            {
+              "id": "sg-w-adh-p-3",
+              "label": "Aux mapping edit",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-w-intra",
+          "title": "Intraday",
+          "description": "Reforecast, shrink, reallocations",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-w-intra-p-0",
+              "label": "Move agent pool",
+              "granted": false
+            },
+            {
+              "id": "sg-w-intra-p-1",
+              "label": "Close queue surge",
+              "granted": false
+            },
+            {
+              "id": "sg-w-intra-p-2",
+              "label": "Notify teams",
+              "granted": true
+            },
+            {
+              "id": "sg-w-intra-p-3",
+              "label": "Rebalance skills",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-w-gam",
+          "title": "Gamification lite",
+          "description": "Optional leaderboards tied to QoS",
+          "grantedCount": 1,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-w-gam-p-0",
+              "label": "Leaderboard toggle",
+              "granted": false
+            },
+            {
+              "id": "sg-w-gam-p-1",
+              "label": "Metric weight edit",
+              "granted": false
+            },
+            {
+              "id": "sg-w-gam-p-2",
+              "label": "Display on TV wall",
+              "granted": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-lead-mgmt",
+      "title": "Lead & case management",
+      "description": "Lead lifecycle, dispositions, and CRM-aligned records",
+      "sidebarCountLabel": 19,
+      "grantedCount": 4,
+      "totalCount": 19,
+      "subgroups": [
+        {
+          "id": "sg-l-dis",
+          "title": "Disposition codes",
+          "description": "Taxonomy governance",
+          "grantedCount": 1,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-l-dis-p-0",
+              "label": "Suggest new code",
+              "granted": false
+            },
+            {
+              "id": "sg-l-dis-p-1",
+              "label": "Retire code",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-l-dis-p-2",
+              "label": "Map to QA reason",
+              "granted": false
+            },
+            {
+              "id": "sg-l-dis-p-3",
+              "label": "Audit trail view",
+              "granted": true
+            },
+            {
+              "id": "sg-l-dis-p-4",
+              "label": "Bulk remap",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-l-prior",
+          "title": "Priority & SLA",
+          "description": "SLA clocks and escalation",
+          "grantedCount": 1,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-l-prior-p-0",
+              "label": "Breach alert",
+              "granted": true
+            },
+            {
+              "id": "sg-l-prior-p-1",
+              "label": "Escalate L2",
+              "granted": false
+            },
+            {
+              "id": "sg-l-prior-p-2",
+              "label": "Pause SLA",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-l-prior-p-3",
+              "label": "VIP pin",
+              "granted": false
+            },
+            {
+              "id": "sg-l-prior-p-4",
+              "label": "Throttling rule",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-l-imp",
+          "title": "Imports & merges",
+          "description": "Bulk leads and dedupe",
+          "grantedCount": 1,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-l-imp-p-0",
+              "label": "Dry run import",
+              "granted": false
+            },
+            {
+              "id": "sg-l-imp-p-1",
+              "label": "Commit import",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-l-imp-p-2",
+              "label": "Merge duplicate",
+              "granted": false
+            },
+            {
+              "id": "sg-l-imp-p-3",
+              "label": "Enrichment hook",
+              "granted": false
+            },
+            {
+              "id": "sg-l-imp-p-4",
+              "label": "Error log export",
+              "granted": true
+            }
+          ]
+        },
+        {
+          "id": "sg-l-case",
+          "title": "Case records",
+          "description": "360° timelines and linkage",
+          "grantedCount": 1,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-l-case-p-0",
+              "label": "View timeline",
+              "granted": true
+            },
+            {
+              "id": "sg-l-case-p-1",
+              "label": "Link outbound touch",
+              "granted": false
+            },
+            {
+              "id": "sg-l-case-p-2",
+              "label": "PII purge request",
+              "granted": false
+            },
+            {
+              "id": "sg-l-case-p-3",
+              "label": "Export case PDF",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-analysis",
+      "title": "Analysis",
+      "description": "Dashboards, speech analytics correlations, and deep operational drill-down",
+      "sidebarCountLabel": 15,
+      "grantedCount": 2,
+      "totalCount": 15,
+      "subgroups": [
+        {
+          "id": "sg-dash",
+          "title": "Dashboards",
+          "description": "Saved views and KPI tiles",
+          "grantedCount": 2,
+          "totalCount": 8,
+          "permissions": [
+            {
+              "id": "sg-dash-p-0",
+              "label": "Sales funnel",
+              "granted": true
+            },
+            {
+              "id": "sg-dash-p-1",
+              "label": "SLA heatmap",
+              "granted": true
+            },
+            {
+              "id": "sg-dash-p-2",
+              "label": "Agent scoreboard",
+              "granted": false
+            },
+            {
+              "id": "sg-dash-p-3",
+              "label": "Custom SQL",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-dash-p-4",
+              "label": "Forecast blend",
+              "granted": false
+            },
+            {
+              "id": "sg-dash-p-5",
+              "label": "Cohort compare",
+              "granted": false
+            },
+            {
+              "id": "sg-dash-p-6",
+              "label": "Export snapshot",
+              "granted": false
+            },
+            {
+              "id": "sg-dash-p-7",
+              "label": "Alert subscription",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-an-sp",
+          "title": "Speech analytics labels",
+          "description": "Topic, intent & sentiment overlays",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-an-sp-p-0",
+              "label": "Bind label set",
+              "granted": false
+            },
+            {
+              "id": "sg-an-sp-p-1",
+              "label": "Retrain corpus",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-an-sp-p-2",
+              "label": "Precision audit",
+              "granted": false
+            },
+            {
+              "id": "sg-an-sp-p-3",
+              "label": "Agent opt-out anonymize",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-an-path",
+          "title": "Journey attribution",
+          "description": "Path mix across intents",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-an-path-p-0",
+              "label": "Sankey explorer",
+              "granted": false
+            },
+            {
+              "id": "sg-an-path-p-1",
+              "label": "Segment compare",
+              "granted": false
+            },
+            {
+              "id": "sg-an-path-p-2",
+              "label": "Cost-per-resolution",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-qm",
+      "title": "Quality assurance",
+      "description": "Scorecards, calibrations, coaching, disputes, root-cause",
+      "sidebarCountLabel": 13,
+      "grantedCount": 0,
+      "totalCount": 13,
+      "subgroups": [
+        {
+          "id": "sg-q-sc",
+          "title": "Scorecards",
+          "description": "Weighted rubrics and auto fail rules",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-q-sc-p-0",
+              "label": "Draft rubric",
+              "granted": false
+            },
+            {
+              "id": "sg-q-sc-p-1",
+              "label": "Publish version",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-q-sc-p-2",
+              "label": "Bind to queues",
+              "granted": false
+            },
+            {
+              "id": "sg-q-sc-p-3",
+              "label": "Random sample sizing",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-q-cal",
+          "title": "Calibration",
+          "description": "Agreement sessions across evaluators",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-q-cal-p-0",
+              "label": "Host calibration",
+              "granted": false
+            },
+            {
+              "id": "sg-q-cal-p-1",
+              "label": "Drift correction",
+              "granted": false
+            },
+            {
+              "id": "sg-q-cal-p-2",
+              "label": "Blind adjudicate",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-q-ch",
+          "title": "Coaching workflows",
+          "description": "Action plans tied to evaluations",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-q-ch-p-0",
+              "label": "Assign coach",
+              "granted": false
+            },
+            {
+              "id": "sg-q-ch-p-1",
+              "label": "Track completion",
+              "granted": false
+            },
+            {
+              "id": "sg-q-ch-p-2",
+              "label": "Close loop survey",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-q-disp",
+          "title": "Disputes",
+          "description": "Formal contest of scores",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-q-disp-p-0",
+              "label": "Raise dispute",
+              "granted": false
+            },
+            {
+              "id": "sg-q-disp-p-1",
+              "label": "Arbitrate",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-q-disp-p-2",
+              "label": "Escalate legal",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-user-admin",
+      "title": "Users & identity",
+      "description": "Org directory, SSO, MFA, impersonation governance",
+      "sidebarCountLabel": 12,
+      "grantedCount": 0,
+      "totalCount": 12,
+      "subgroups": [
+        {
+          "id": "sg-u-dir",
+          "title": "Directory",
+          "description": "Agents, supervisors, admins",
+          "grantedCount": 0,
+          "totalCount": 5,
+          "permissions": [
+            {
+              "id": "sg-u-dir-p-0",
+              "label": "Create user",
+              "granted": false
+            },
+            {
+              "id": "sg-u-dir-p-1",
+              "label": "Deactivate user",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-u-dir-p-2",
+              "label": "Reset MFA",
+              "granted": false
+            },
+            {
+              "id": "sg-u-dir-p-3",
+              "label": "Assign skills",
+              "granted": false
+            },
+            {
+              "id": "sg-u-dir-p-4",
+              "label": "Bulk CSV import",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-u-sso",
+          "title": "SSO & SAML",
+          "description": "IdP metadata and JIT",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-u-sso-p-0",
+              "label": "Upload metadata",
+              "granted": false
+            },
+            {
+              "id": "sg-u-sso-p-1",
+              "label": "Test SAML flow",
+              "granted": false
+            },
+            {
+              "id": "sg-u-sso-p-2",
+              "label": "Group mapping edit",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-u-sso-p-3",
+              "label": "SCIM reconcile",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-u-imp",
+          "title": "Privileged access",
+          "description": "Support impersonation vault",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-u-imp-p-0",
+              "label": "Request impersonation",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-u-imp-p-1",
+              "label": "Approve session",
+              "granted": false
+            },
+            {
+              "id": "sg-u-imp-p-2",
+              "label": "Session watermark",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-sys-config",
+      "title": "Routing & platform",
+      "description": "Queues, disposition maps, geo and business-hours policies",
+      "sidebarCountLabel": 10,
+      "grantedCount": 0,
+      "totalCount": 10,
+      "subgroups": [
+        {
+          "id": "sg-s-q",
+          "title": "Queues & prioritization",
+          "description": "Fairness tiers and backlog caps",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-s-q-p-0",
+              "label": "Create queue",
+              "granted": false
+            },
+            {
+              "id": "sg-s-q-p-1",
+              "label": "Priority formula",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-s-q-p-2",
+              "label": "Overflow graph",
+              "granted": false
+            },
+            {
+              "id": "sg-s-q-p-3",
+              "label": "Skill stack editor",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-s-bh",
+          "title": "Business hours",
+          "description": "Regional calendars",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-s-bh-p-0",
+              "label": "Edit holiday calendar",
+              "granted": false
+            },
+            {
+              "id": "sg-s-bh-p-1",
+              "label": "After-hours IVR shortcut",
+              "granted": false
+            },
+            {
+              "id": "sg-s-bh-p-2",
+              "label": "DST transition test",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-s-geo",
+          "title": "Geo & tenancy",
+          "description": "Data residency footprints",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-s-geo-p-0",
+              "label": "Tenant split view",
+              "granted": false
+            },
+            {
+              "id": "sg-s-geo-p-1",
+              "label": "Storage region pin",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-s-geo-p-2",
+              "label": "Cross-region fail drill",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-compliance-quality",
+      "title": "Compliance & risk",
+      "description": "Recording policy, HIPAA/PCI overlays, DPIA artefacts, attestations",
+      "sidebarCountLabel": 14,
+      "grantedCount": 0,
+      "totalCount": 14,
+      "subgroups": [
+        {
+          "id": "sg-x-rec",
+          "title": "Recording policy",
+          "description": "Which legs to record vs mask",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-x-rec-p-0",
+              "label": "Consent capture mode",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-x-rec-p-1",
+              "label": "Dual-consent jurisdictions",
+              "granted": false
+            },
+            {
+              "id": "sg-x-rec-p-2",
+              "label": "Pause-record events",
+              "granted": false
+            },
+            {
+              "id": "sg-x-rec-p-3",
+              "label": "Export policy doc",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-x_pci",
+          "title": "PCI DSS scope",
+          "description": "Card data handling surface",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-x_pci-p-0",
+              "label": "DTMF masking depth",
+              "granted": false
+            },
+            {
+              "id": "sg-x_pci-p-1",
+              "label": "Pan scan alert",
+              "granted": false
+            },
+            {
+              "id": "sg-x_pci-p-2",
+              "label": "ASV scope tag",
+              "granted": false
+            },
+            {
+              "id": "sg-x_pci-p-3",
+              "label": "Segmentation attest",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        },
+        {
+          "id": "sg-x-pii",
+          "title": "Data subject rights",
+          "description": "DSAR timelines",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-x-pii-p-0",
+              "label": "Export subject pack",
+              "granted": false
+            },
+            {
+              "id": "sg-x-pii-p-1",
+              "label": "Erasure certify",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-x-pii-p-2",
+              "label": "Consent withdraw log",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-x-monitor",
+          "title": "Monitored assurance",
+          "description": "Policy simulation & sampling",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-x-monitor-p-0",
+              "label": "Run controls test",
+              "granted": false
+            },
+            {
+              "id": "sg-x-monitor-p-1",
+              "label": "Sample transactions",
+              "granted": false
+            },
+            {
+              "id": "sg-x-monitor-p-2",
+              "label": "Issue CAPA tracking",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-integrations",
+      "title": "Integrations",
+      "description": "CRM, CDP, data warehouse, ticketing, middleware",
+      "sidebarCountLabel": 10,
+      "grantedCount": 0,
+      "totalCount": 10,
+      "subgroups": [
+        {
+          "id": "sg-i-api",
+          "title": "API keys & quotas",
+          "description": "Per-tenant quotas and revocation",
+          "grantedCount": 0,
+          "totalCount": 4,
+          "permissions": [
+            {
+              "id": "sg-i-api-p-0",
+              "label": "Create keypair",
+              "granted": false
+            },
+            {
+              "id": "sg-i-api-p-1",
+              "label": "Rotate secret",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-i-api-p-2",
+              "label": "Burst rate override",
+              "granted": false
+            },
+            {
+              "id": "sg-i-api-p-3",
+              "label": "IP pinning",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-i-crm",
+          "title": "CRM connectors",
+          "description": "Salesforce/Dynamics/Zendesk sync",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-i-crm-p-0",
+              "label": "Map fields",
+              "granted": false
+            },
+            {
+              "id": "sg-i-crm-p-1",
+              "label": "Conflict resolver",
+              "granted": false
+            },
+            {
+              "id": "sg-i-crm-p-2",
+              "label": "Bi-direction pause",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-i-evt",
+          "title": "Event webhooks",
+          "description": "Signed delivery and replay safety",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-i-evt-p-0",
+              "label": "Register endpoint",
+              "granted": false
+            },
+            {
+              "id": "sg-i-evt-p-1",
+              "label": "Replay DLQ",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-i-evt-p-2",
+              "label": "Schema validate",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-workspace-data",
+      "title": "Workspace & data",
+      "description": "Sandboxes, redacted exports, lineage, archival legal holds",
+      "sidebarCountLabel": 5,
+      "grantedCount": 0,
+      "totalCount": 5,
+      "subgroups": [
+        {
+          "id": "sg-d-sbx",
+          "title": "Sandboxes",
+          "description": "Non-prod data slices",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-d-sbx-p-0",
+              "label": "Provision sandbox",
+              "granted": false
+            },
+            {
+              "id": "sg-d-sbx-p-1",
+              "label": "Refresh anon data",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-d-sbx-p-2",
+              "label": "Promote config up",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-d-lin",
+          "title": "Lineage catalog",
+          "description": "Field-level lineage and owners",
+          "grantedCount": 0,
+          "totalCount": 2,
+          "permissions": [
+            {
+              "id": "sg-d-lin-p-0",
+              "label": "Declare owner",
+              "granted": false
+            },
+            {
+              "id": "sg-d-lin-p-1",
+              "label": "Break glass access",
+              "granted": false,
+              "isKey": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cat-billing-license",
+      "title": "Billing & licenses",
+      "description": "Consumption metering, contract entitlements, purchase orders",
+      "sidebarCountLabel": 6,
+      "grantedCount": 0,
+      "totalCount": 6,
+      "subgroups": [
+        {
+          "id": "sg-b-mtr",
+          "title": "Metering reads",
+          "description": "Per-minute / per-agent rollups",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-b-mtr-p-0",
+              "label": "Variance explain",
+              "granted": false
+            },
+            {
+              "id": "sg-b-mtr-p-1",
+              "label": "Usage export",
+              "granted": false
+            },
+            {
+              "id": "sg-b-mtr-p-2",
+              "label": "Cost allocation tags",
+              "granted": false
+            }
+          ]
+        },
+        {
+          "id": "sg-b-ent",
+          "title": "Entitlements",
+          "description": "Feature flags bound to SKU",
+          "grantedCount": 0,
+          "totalCount": 3,
+          "permissions": [
+            {
+              "id": "sg-b-ent-p-0",
+              "label": "Bump seat cap",
+              "granted": false,
+              "isKey": true
+            },
+            {
+              "id": "sg-b-ent-p-1",
+              "label": "Temp burst pack",
+              "granted": false
+            },
+            {
+              "id": "sg-b-ent-p-2",
+              "label": "True-up reconcile",
+              "granted": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

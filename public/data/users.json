@@ -1,0 +1,17 @@
+{
+  "rows": [
+    { "id": 1, "userName": "Aditya Pratap Singh", "email": "aditya.singh@exotel.com", "status": "Active", "role": "Admin", "team": "Design" },
+    { "id": 2, "userName": "Rudrakshula Prasanth", "email": "rudrakshula.prasanth@exotel.com", "status": "Suspended", "role": "Admin", "team": "Engineer" },
+    { "id": 3, "userName": "Rashika Jain", "email": "rashika.jain@exotel.com", "status": "Scheduled for Deletion", "role": "Admin", "team": "Design" },
+    { "id": 4, "userName": "Anjali Srivastava", "email": "anjali.srivastava@exotel.com", "status": "Active", "role": "Member", "team": "Design" },
+    { "id": 5, "userName": "Mohit Kumar", "email": "mohit.kumar@exotel.com", "status": "Suspended", "role": "Member", "team": "Engineer" },
+    { "id": 6, "userName": "Priya Sharma", "email": "priya.sharma@exotel.com", "status": "Active", "role": "Admin", "team": "Design" },
+    { "id": 7, "userName": "Vikram Singh", "email": "vikram.singh@exotel.com", "status": "Scheduled for Deletion", "role": "Member", "team": "Engineer" },
+    { "id": 8, "userName": "Neha Gupta", "email": "neha.gupta@exotel.com", "status": "Active", "role": "Member", "team": "Design" },
+    { "id": 9, "userName": "Arjun Mehta", "email": "arjun.mehta@exotel.com", "status": "Active", "role": "Admin", "team": "Engineer" },
+    { "id": 10, "userName": "Kavya Reddy", "email": "kavya.reddy@exotel.com", "status": "Suspended", "role": "Member", "team": "Design" },
+    { "id": 11, "userName": "Rohan Desai", "email": "rohan.desai@exotel.com", "status": "Active", "role": "Member", "team": "Engineer" },
+    { "id": 12, "userName": "Sneha Iyer", "email": "sneha.iyer@exotel.com", "status": "Scheduled for Deletion", "role": "Admin", "team": "Design" },
+    { "id": 13, "userName": "Karan Malhotra", "email": "karan.malhotra@exotel.com", "status": "Active", "role": "Member", "team": "Engineer" }
+  ]
+}
