@@ -8,8 +8,10 @@ import {
   useMemo,
   useState,
   type ChangeEvent,
+  type ElementType,
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
+  type SyntheticEvent,
 } from 'react'
 import MenuItem from '@mui/material/MenuItem'
 import Slide from '@mui/material/Slide'
@@ -180,9 +182,76 @@ function privilegeSetSaveSnackbarSlide(props: SlideProps) {
   return <Slide {...props} direction="up" />
 }
 
+const SEARCH_MATCH_HIGHLIGHT_BG = 'rgba(255, 235, 59, 0.55)'
+
+function splitHighlightSegments(text: string, query: string): { text: string; hit: boolean }[] {
+  const q = query.trim()
+  if (!q) return [{ text, hit: false }]
+  const lower = text.toLowerCase()
+  const ql = q.toLowerCase()
+  const out: { text: string; hit: boolean }[] = []
+  let start = 0
+  while (start < text.length) {
+    const idx = lower.indexOf(ql, start)
+    if (idx === -1) {
+      if (start < text.length) out.push({ text: text.slice(start), hit: false })
+      break
+    }
+    if (idx > start) out.push({ text: text.slice(start, idx), hit: false })
+    out.push({ text: text.slice(idx, idx + q.length), hit: true })
+    start = idx + q.length
+  }
+  return out.length > 0 ? out : [{ text, hit: false }]
+}
+
+function HighlightedSearchText({
+  text,
+  query,
+  variant = 'body2',
+  component = 'span',
+  noWrap,
+  sx,
+}: {
+  text: string
+  query: string
+  variant?: 'body2' | 'body3' | 'title3' | 'label2'
+  component?: ElementType
+  noWrap?: boolean
+  sx?: SxProps<Theme>
+}) {
+  const q = query.trim()
+  const segs = splitHighlightSegments(text, q)
+  return (
+    <Typography component={component} variant={variant} noWrap={noWrap} sx={sx}>
+      {segs.map((seg, i) =>
+        seg.hit ? (
+          <Box
+            key={i}
+            component="mark"
+            sx={{
+              bgcolor: SEARCH_MATCH_HIGHLIGHT_BG,
+              color: 'inherit',
+              fontWeight: 'inherit',
+              fontSize: 'inherit',
+              lineHeight: 'inherit',
+              padding: 0,
+            }}
+          >
+            {seg.text}
+          </Box>
+        ) : (
+          <Fragment key={i}>{seg.text}</Fragment>
+        ),
+      )}
+    </Typography>
+  )
+}
+
 /**
- * Returns a category tree narrowed to subgroup/permission rows that match search,
- * or null when nothing matches. Mirrors permission-row match rules so search works in view mode.
+ * Returns a category tree for search: non-matching categories are omitted.
+ * Permission rows are included only when their labels match. Subgroups stay visible when
+ * the subgroup or parent category text matches but no permission labels do — with an empty
+ * permission list and `searchHeaderOnlyMatch` on the subgroup copy.
  */
 function getCategorySearchView(
   category: PrivilegeCategoryNode,
@@ -191,33 +260,38 @@ function getCategorySearchView(
   const q = rawSearch.trim().toLowerCase()
   if (!q) return category
 
+  const catTextMatch =
+    category.title.toLowerCase().includes(q) ||
+    (category.description || '').toLowerCase().includes(q)
+
   if (category.subgroups.length === 0) {
-    const hit =
-      category.title.toLowerCase().includes(q) ||
-      (category.description || '').toLowerCase().includes(q)
-    return hit ? category : null
+    return catTextMatch ? category : null
   }
+
+  const nextSubgroups: PrivilegeSubgroupNode[] = []
+
+  for (const sg of category.subgroups) {
+    const sgTextMatch =
+      sg.title.toLowerCase().includes(q) || (sg.description || '').toLowerCase().includes(q)
+    const permHits = sg.permissions.filter((p) => p.label.toLowerCase().includes(q))
+
+    const include = permHits.length > 0 || sgTextMatch || catTextMatch
+    if (!include) continue
+
+    const searchHeaderOnlyMatch = permHits.length === 0 && (sgTextMatch || catTextMatch)
+
+    nextSubgroups.push({
+      ...sg,
+      permissions: permHits,
+      searchHeaderOnlyMatch,
+    })
+  }
+
+  if (nextSubgroups.length === 0) return null
 
   return {
     ...category,
-    subgroups: category.subgroups
-      .map((sg) => ({
-        ...sg,
-        permissions: sg.permissions.filter(
-          (p) =>
-            p.label.toLowerCase().includes(q) ||
-            sg.title.toLowerCase().includes(q) ||
-            (sg.description || '').toLowerCase().includes(q) ||
-            category.title.toLowerCase().includes(q) ||
-            (category.description || '').toLowerCase().includes(q),
-        ),
-      }))
-      .filter(
-        (sg) =>
-          sg.permissions.length > 0 ||
-          sg.title.toLowerCase().includes(q) ||
-          (sg.description || '').toLowerCase().includes(q),
-      ),
+    subgroups: nextSubgroups,
   }
 }
 
@@ -275,6 +349,8 @@ function PrivilegesCategorySection({
   onBulkSubgroupGrant,
   expanded,
   onExpandedChange,
+  highlightQuery,
+  privilegesSearchActive,
 }: {
   category: PrivilegeCategoryNode
   /** Full category (same id) for counts and bulk actions when `category` is search-narrowed. */
@@ -286,16 +362,25 @@ function PrivilegesCategorySection({
   onBulkSubgroupGrant: (sg: PrivilegeSubgroupNode, granted: boolean) => void
   expanded: boolean
   onExpandedChange: (expanded: boolean) => void
+  highlightQuery: string
+  privilegesSearchActive: boolean
 }) {
   const catCounts = useMemo(
     () => tallyCategoryGrants(lookupCategory, grantByPermissionId),
     [lookupCategory, grantByPermissionId],
   )
+
+  const accordionExpanded = privilegesSearchActive ? true : expanded
+  const handleAccordionChange = privilegesSearchActive
+    ? () => {}
+    : (_: SyntheticEvent, exp: boolean) => {
+        onExpandedChange(exp)
+      }
   if (category.subgroups.length === 0) {
     return (
       <Accordion
-        expanded={expanded}
-        onChange={(_, exp) => onExpandedChange(exp)}
+        expanded={accordionExpanded}
+        onChange={handleAccordionChange}
         disableGutters
         sx={{
           '&:before': { display: 'none' },
@@ -310,18 +395,20 @@ function PrivilegesCategorySection({
             py: 0,
             minHeight: 48,
             bgcolor: accordionSurfaceBg,
-            borderBottom: expanded ? 1 : 0,
+            borderBottom: accordionExpanded ? 1 : 0,
             borderColor: 'divider',
             '& .MuiAccordionSummary-content': { alignItems: 'flex-start', my: 1.5 },
           }}
         >
           <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-            <Typography variant="title3" component="h3">
-              {category.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {category.description || ' '}
-            </Typography>
+            <HighlightedSearchText variant="title3" component="h3" text={category.title} query={highlightQuery} />
+            <HighlightedSearchText
+              variant="body2"
+              component="span"
+              text={category.description || '\u00a0'}
+              query={highlightQuery}
+              sx={{ color: 'text.secondary', display: 'block', fontWeight: 400 }}
+            />
           </Stack>
         </AccordionSummary>
         <AccordionDetails sx={{ px: { xs: 1, sm: 2 }, pb: 3, pt: 1 }}>
@@ -345,8 +432,8 @@ function PrivilegesCategorySection({
 
   return (
     <Accordion
-      expanded={expanded}
-      onChange={(_, exp) => onExpandedChange(exp)}
+      expanded={accordionExpanded}
+      onChange={handleAccordionChange}
       disableGutters
       sx={{
         '&:before': { display: 'none' },
@@ -364,7 +451,7 @@ function PrivilegesCategorySection({
           py: 0,
           alignItems: { xs: 'flex-start', sm: 'center' },
           bgcolor: accordionSurfaceBg,
-          borderBottom: expanded ? 1 : 0,
+          borderBottom: accordionExpanded ? 1 : 0,
           borderColor: 'divider',
           '& .MuiAccordionSummary-expandIconWrapper': {
             color: 'action.active',
@@ -379,12 +466,14 @@ function PrivilegesCategorySection({
         }}
       >
         <Stack spacing={0.5} sx={{ minWidth: 0, flex: '1 1 240px', maxWidth: '100%' }}>
-          <Typography variant="title3" component="h3">
-            {category.title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {category.description}
-          </Typography>
+          <HighlightedSearchText variant="title3" component="h3" text={category.title} query={highlightQuery} />
+          <HighlightedSearchText
+            variant="body2"
+            component="span"
+            text={category.description}
+            query={highlightQuery}
+            sx={{ color: 'text.secondary', display: 'block', fontWeight: 400 }}
+          />
         </Stack>
         <Stack
           direction="row"
@@ -463,12 +552,19 @@ function PrivilegesCategorySection({
                     justifyContent="space-between"
                   >
                     <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                      <Typography variant="label2" component="h4">
-                        {sgView.title}
-                      </Typography>
-                      <Typography variant="body3" color="text.secondary">
-                        {sgView.description}
-                      </Typography>
+                      <HighlightedSearchText
+                        variant="label2"
+                        component="h4"
+                        text={sgView.title}
+                        query={highlightQuery}
+                      />
+                      <HighlightedSearchText
+                        variant="body3"
+                        component="span"
+                        text={sgView.description}
+                        query={highlightQuery}
+                        sx={{ color: 'text.secondary' }}
+                      />
                     </Stack>
                     <Stack direction="row" spacing={2} alignItems="center" flexShrink={0}>
                       <Typography variant="body2" color="text.secondary">
@@ -507,110 +603,121 @@ function PrivilegesCategorySection({
                 </Box>
                 <Divider />
                 <Box sx={{ p: 2, pt: 2 }}>
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gap: { xs: 1, sm: 1.25, md: 2 },
-                      rowGap: { xs: 1.5, md: 2 },
-                      gridTemplateColumns: {
-                        xs: '1fr',
-                        sm: 'repeat(2, minmax(0, 1fr))',
-                        md: 'repeat(3, minmax(0, 1fr))',
-                        lg: 'repeat(5, minmax(0, 1fr))',
-                      },
-                    }}
-                  >
-                    {sgView.permissions.map((p) => {
-                      const granted = isPermissionEffectiveGranted(p, grantByPermissionId)
-                      const planGated = Boolean(p.isKey)
-                      const rowDisabled = !editMode || planGated
-                      const hoverTooltip =
-                        planGated
-                          ? PLAN_GATED_PRIVILEGE_TOOLTIP
-                          : !editMode
-                            ? VIEW_MODE_TOOLTIP
-                            : ''
+                  {sgView.searchHeaderOnlyMatch ? (
+                    <Typography variant="body2" color="text.secondary">
+                      No matching result was found.
+                    </Typography>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gap: { xs: 1, sm: 1.25, md: 2 },
+                        rowGap: { xs: 1.5, md: 2 },
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          sm: 'repeat(2, minmax(0, 1fr))',
+                          md: 'repeat(3, minmax(0, 1fr))',
+                          lg: 'repeat(5, minmax(0, 1fr))',
+                        },
+                      }}
+                    >
+                      {sgView.permissions.map((p) => {
+                        const granted = isPermissionEffectiveGranted(p, grantByPermissionId)
+                        const planGated = Boolean(p.isKey)
+                        const rowDisabled = !editMode || planGated
+                        const hoverTooltip =
+                          planGated
+                            ? PLAN_GATED_PRIVILEGE_TOOLTIP
+                            : !editMode
+                              ? VIEW_MODE_TOOLTIP
+                              : ''
 
-                      const permissionRow = (
-                        <FormControlLabel
-                          sx={{
-                            alignItems: 'center',
-                            m: 0,
-                            gap: '4px',
-                            minHeight: 32,
-                            maxWidth: '100%',
-                            cursor: editMode && !planGated ? 'pointer' : 'not-allowed',
-                            '& .MuiFormControlLabel-label': {
-                              overflow: 'hidden',
-                            },
-                            ...(editMode
-                              ? planGated
-                                ? {
-                                    opacity: 0.9,
-                                  }
-                                : {}
-                              : {
-                                  cursor: 'not-allowed',
-                                  opacity: 0.85,
-                                }),
-                          }}
-                          disableTypography
-                          disabled={rowDisabled}
-                          label={
-                            <Stack
-                              component="span"
-                              direction="row"
-                              alignItems="center"
-                              spacing={0.5}
-                              sx={{ minWidth: 0, flex: 1 }}
-                            >
-                              <Typography component="span" variant="body2" noWrap sx={{ minWidth: 0 }}>
-                                {p.label}
-                              </Typography>
-                              {planGated ? (
-                                <Icon name="key" size="sm" sx={{ color: 'secondary.main', flexShrink: 0 }} />
-                              ) : null}
-                            </Stack>
-                          }
-                          control={
-                            <Checkbox
-                              size="small"
-                              checked={granted}
-                              disabled={rowDisabled}
-                              onChange={
-                                editMode && !planGated
-                                  ? () => {
-                                      onTogglePermission(p.id)
+                        const permissionRow = (
+                          <FormControlLabel
+                            sx={{
+                              alignItems: 'center',
+                              m: 0,
+                              gap: '4px',
+                              minHeight: 32,
+                              maxWidth: '100%',
+                              cursor: editMode && !planGated ? 'pointer' : 'not-allowed',
+                              '& .MuiFormControlLabel-label': {
+                                overflow: 'hidden',
+                              },
+                              ...(editMode
+                                ? planGated
+                                  ? {
+                                      opacity: 0.9,
                                     }
-                                  : undefined
-                              }
-                            />
-                          }
-                        />
-                      )
-
-                      return (
-                        <Fragment key={p.id}>
-                          {hoverTooltip ? (
-                            <Tooltip title={hoverTooltip} placement="top">
-                              <Box
+                                  : {}
+                                : {
+                                    cursor: 'not-allowed',
+                                    opacity: 0.85,
+                                  }),
+                            }}
+                            disableTypography
+                            disabled={rowDisabled}
+                            label={
+                              <Stack
                                 component="span"
-                                sx={{
-                                  display: 'block',
-                                  width: '100%',
-                                  maxWidth: '100%',
-                                }}
+                                direction="row"
+                                alignItems="center"
+                                spacing={0.5}
+                                sx={{ minWidth: 0, flex: 1 }}
                               >
-                                {permissionRow}
-                              </Box>
-                            </Tooltip>
-                          ) : (
-                            permissionRow
-                          )}
-                        </Fragment>
-                      )
-                    })}
-                  </Box>
+                                <HighlightedSearchText
+                                  component="span"
+                                  variant="body2"
+                                  text={p.label}
+                                  query={highlightQuery}
+                                  noWrap
+                                  sx={{ minWidth: 0 }}
+                                />
+                                {planGated ? (
+                                  <Icon name="key" size="sm" sx={{ color: 'secondary.main', flexShrink: 0 }} />
+                                ) : null}
+                              </Stack>
+                            }
+                            control={
+                              <Checkbox
+                                size="small"
+                                checked={granted}
+                                disabled={rowDisabled}
+                                onChange={
+                                  editMode && !planGated
+                                    ? () => {
+                                        onTogglePermission(p.id)
+                                      }
+                                    : undefined
+                                }
+                              />
+                            }
+                          />
+                        )
+
+                        return (
+                          <Fragment key={p.id}>
+                            {hoverTooltip ? (
+                              <Tooltip title={hoverTooltip} placement="top">
+                                <Box
+                                  component="span"
+                                  sx={{
+                                    display: 'block',
+                                    width: '100%',
+                                    maxWidth: '100%',
+                                  }}
+                                >
+                                  {permissionRow}
+                                </Box>
+                              </Tooltip>
+                            ) : (
+                              permissionRow
+                            )}
+                          </Fragment>
+                        )
+                      })}
+                    </Box>
+                  )}
                 </Box>
               </Box>
             )
@@ -713,12 +820,13 @@ export function PrivilegeSetDetailPage() {
   }, [detail, privilegeSetId])
 
   useEffect(() => {
+    if (privSearch.trim()) return
     setExpandedCategoryId((current) => {
       if (visibleCategories.length === 0) return null
       if (current != null && visibleCategories.some((c) => c.id === current)) return current
       return visibleCategories[0]?.id ?? null
     })
-  }, [visibleCategories])
+  }, [visibleCategories, privSearch])
 
   const togglePermission = useCallback((permissionId: string) => {
     setGrantByPermissionId((prev) => ({
@@ -1047,6 +1155,8 @@ export function PrivilegeSetDetailPage() {
             renderChip={(item) => <AssignedRoleChip name={item.label} />}
             collapseExpandLabelCollapsed="View all roles"
             editMode={editMode}
+            sourceTotalCount={assignedRoleNamesList.length}
+            emptyListNounPlural="roles"
           />
 
           {/* Select Privileges */}
@@ -1186,17 +1296,18 @@ export function PrivilegeSetDetailPage() {
                           },
                         }}
                       >
-                        <Typography
+                        <HighlightedSearchText
                           variant="body2"
+                          component="span"
+                          text={c.title}
+                          query={privSearch}
                           sx={{
                             flex: '1 1 auto',
                             minWidth: 0,
                             fontWeight: (theme: Theme) => theme.typography.fontWeightRegular,
                             color: 'text.primary',
                           }}
-                        >
-                          {c.title}
-                        </Typography>
+                        />
                         <Chip
                           size="small"
                           variant="tonal"
@@ -1231,36 +1342,46 @@ export function PrivilegeSetDetailPage() {
                     overflowY: 'auto',
                   }}
                 >
-                  {visibleCategories.map((c, idx) => {
-                    const lookupCategory = detail.categories.find((x) => x.id === c.id) ?? c
-                    return (
-                    <Box
-                      key={c.id}
-                      id={`priv-cat-${c.id}`}
-                      sx={(theme: Theme) => ({
-                        scrollMarginTop: theme.spacing(2),
-                        borderBottom:
-                          idx < visibleCategories.length - 1
-                            ? `1px solid ${theme.palette.divider}`
-                            : 'none',
-                      })}
-                    >
-                      <PrivilegesCategorySection
-                        category={c}
-                        lookupCategory={lookupCategory}
-                        editMode={editMode}
-                        grantByPermissionId={grantByPermissionId}
-                        onTogglePermission={togglePermission}
-                        onBulkCategoryGrant={bulkCategoryGrant}
-                        onBulkSubgroupGrant={bulkSubgroupGrant}
-                        expanded={expandedCategoryId === c.id}
-                        onExpandedChange={(open) =>
-                          setExpandedCategoryId(open ? c.id : null)
-                        }
-                      />
+                  {visibleCategories.length === 0 && privSearch.trim() ? (
+                    <Box sx={{ px: 2, py: 6, textAlign: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Nothing matches “{privSearch.trim()}”. Try another search term.
+                      </Typography>
                     </Box>
-                  )
-                  })}
+                  ) : (
+                    visibleCategories.map((c, idx) => {
+                      const lookupCategory = detail.categories.find((x) => x.id === c.id) ?? c
+                      return (
+                        <Box
+                          key={c.id}
+                          id={`priv-cat-${c.id}`}
+                          sx={(theme: Theme) => ({
+                            scrollMarginTop: theme.spacing(2),
+                            borderBottom:
+                              idx < visibleCategories.length - 1
+                                ? `1px solid ${theme.palette.divider}`
+                                : 'none',
+                          })}
+                        >
+                          <PrivilegesCategorySection
+                            category={c}
+                            lookupCategory={lookupCategory}
+                            editMode={editMode}
+                            grantByPermissionId={grantByPermissionId}
+                            onTogglePermission={togglePermission}
+                            onBulkCategoryGrant={bulkCategoryGrant}
+                            onBulkSubgroupGrant={bulkSubgroupGrant}
+                            expanded={expandedCategoryId === c.id}
+                            onExpandedChange={(open) =>
+                              setExpandedCategoryId(open ? c.id : null)
+                            }
+                            highlightQuery={privSearch}
+                            privilegesSearchActive={Boolean(privSearch.trim())}
+                          />
+                        </Box>
+                      )
+                    })
+                  )}
                   <Box
                     sx={{
                       px: 2,

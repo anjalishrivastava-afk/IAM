@@ -32,6 +32,7 @@ import {
 import { fetchPrivilegeSetDetail } from '../../api/rbacApi'
 import type { PrivilegeSetDetailModel } from '../../data/privilegeSetDetailData'
 import type { PrivilegeSetRow } from '../../data/privilegeSets'
+import { RbacListEmptyPlaceholder, rbacQuotedSearch } from './RbacListEmptyPlaceholder'
 
 const HEADER_BG = '#f1f1f1'
 
@@ -260,6 +261,51 @@ export function ManagePrivilegeSetsDrawer({
   )
   const unassignedCount = privilegeSets.length - assignedCount
 
+  const searchTrimPrivDrawer = search.trim()
+  const privilegeSetsDrawerEmptyMessaging = useMemo((): { title: string; description: string } | null => {
+    if (rows.length > 0) return null
+    const quoted = rbacQuotedSearch(search)
+    if (tab === 0) {
+      if (assignedCount === 0) {
+        return searchTrimPrivDrawer
+          ? {
+              title: 'No privilege sets assigned',
+              description: `Nothing matches ${quoted || 'that search'}. Clear the search or open the Unassigned tab to attach privilege sets.`,
+            }
+          : {
+              title: 'No privilege sets assigned',
+              description: 'Open the Unassigned tab to attach privilege sets to this role.',
+            }
+      }
+      return {
+        title: quoted ? `No results for ${quoted}` : 'No matching privilege sets',
+        description: 'Try different keywords or clear the search.',
+      }
+    }
+    if (unassignedCount === 0) {
+      return searchTrimPrivDrawer
+        ? {
+            title: quoted ? `No results for ${quoted}` : 'No matching privilege sets',
+            description: 'Try different keywords or clear the search.',
+          }
+        : {
+            title: 'All privilege sets are assigned',
+            description: 'Every catalog privilege set is already linked to this role.',
+          }
+    }
+    return {
+      title: quoted ? `No results for ${quoted}` : 'No matching privilege sets',
+      description: 'Try different keywords or clear the search.',
+    }
+  }, [
+    rows.length,
+    tab,
+    assignedCount,
+    unassignedCount,
+    search,
+    searchTrimPrivDrawer,
+  ])
+
   const changeStats = useMemo(() => {
     const total = countSetDiff(committedSet, draftSet)
     const added: string[] = []
@@ -473,10 +519,8 @@ export function ManagePrivilegeSetsDrawer({
         }
       >
         <Stack spacing={1} sx={{ px: 0, pt: 2, pb: 1 }}>
-          {rows.length === 0 ? (
-            <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-              {tab === 0 ? 'No privilege sets assigned to this role.' : 'All privilege sets are already assigned.'}
-            </Typography>
+          {privilegeSetsDrawerEmptyMessaging ? (
+            <RbacListEmptyPlaceholder roomy {...privilegeSetsDrawerEmptyMessaging} />
           ) : (
             rows.map((ps) => (
                 <Accordion

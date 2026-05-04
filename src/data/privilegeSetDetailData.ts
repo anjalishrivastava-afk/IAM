@@ -18,6 +18,11 @@ export interface PrivilegeSubgroupNode {
   grantedCount: number
   totalCount: number
   permissions: PermissionNode[]
+  /**
+   * Set only on search-filtered copies: subgroup or parent category matched the query,
+   * but no individual permission labels did — UI shows a placeholder.
+   */
+  searchHeaderOnlyMatch?: boolean
 }
 
 export interface PrivilegeCategoryNode {

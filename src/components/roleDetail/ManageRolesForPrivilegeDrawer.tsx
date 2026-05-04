@@ -41,6 +41,8 @@ import {
 } from '@exotel-npm-dev/signal-design-system'
 import type { UserManagementRoleRow } from '../../data/userManagementRoles'
 import { avatarFillFromHue } from '../../utils/avatarSurface'
+import { BulkDrawerSelectionToolbar } from './BulkDrawerSelectionToolbar'
+import { RbacListEmptyPlaceholder, rbacQuotedSearch } from './RbacListEmptyPlaceholder'
 
 const HEADER_BG = '#f1f1f1'
 const DRAWER_WIDTH_PX = 726
@@ -97,24 +99,6 @@ const dataGridSx = {
   },
 } as const
 
-const bulkAssignToolbarOverrideSx = {
-  '&.manage-roles-assign-bulk .MuiToolbar-root .MuiButton-textError': {
-    border: '1px solid',
-    borderColor: 'primary.main',
-    color: 'primary.main',
-    backgroundColor: 'transparent',
-    px: 1.75,
-    textTransform: 'none',
-    fontWeight: 600,
-    boxShadow: 'none',
-    '&:hover': {
-      backgroundColor: (theme: Theme) => `${theme.palette.primary.main}14`,
-      borderColor: 'primary.dark',
-      boxShadow: 'none',
-    },
-  },
-} as const
-
 function headerWithTitleAndKebab(header: string, menuAria: string) {
   return () => (
     <Stack direction="row" alignItems="center" justifyContent="space-between" width="100%" pr={0.5}>
@@ -126,11 +110,6 @@ function headerWithTitleAndKebab(header: string, menuAria: string) {
       </IconButton>
     </Stack>
   )
-}
-
-type BulkAssignBarConfig = {
-  onDelete: (selectedIds: GridRowId[]) => void
-  label?: string | ((selectedCount: number) => string)
 }
 
 export interface ManageRolesForPrivilegeDrawerProps {
@@ -216,6 +195,52 @@ export function ManageRolesForPrivilegeDrawer({
   const assignedCount = useMemo(() => roles.filter((r) => draftSet.has(r.id)).length, [roles, draftSet])
   const unassignedCount = roles.length - assignedCount
   const selectedOnUnassigned = tab === 1 ? selectionSize(selectionModel) : 0
+  const selectedOnAssigned = tab === 0 ? selectionSize(selectionModel) : 0
+
+  const searchTrimRolesDrawer = search.trim()
+  const rolesDrawerListEmptyMessaging = useMemo((): { title: string; description: string } | null => {
+    if (rows.length > 0) return null
+    const quoted = rbacQuotedSearch(search)
+    if (tab === 0) {
+      if (assignedCount === 0) {
+        return searchTrimRolesDrawer
+          ? {
+              title: 'No roles assigned',
+              description: `Nothing matches ${quoted || 'that search'}. Clear the search or open the Unassigned tab to assign roles.`,
+            }
+          : {
+              title: 'No roles assigned',
+              description: 'Open the Unassigned tab to attach roles to this privilege set.',
+            }
+      }
+      return {
+        title: quoted ? `No results for ${quoted}` : 'No matching roles',
+        description: 'Try different keywords or clear the search.',
+      }
+    }
+    if (unassignedCount === 0) {
+      return searchTrimRolesDrawer
+        ? {
+            title: quoted ? `No results for ${quoted}` : 'No matching roles',
+            description: 'Try different keywords or clear the search.',
+          }
+        : {
+            title: 'All roles are assigned',
+            description: 'Every role in this catalog already includes this privilege set.',
+          }
+    }
+    return {
+      title: quoted ? `No results for ${quoted}` : 'No matching roles',
+      description: 'Try different keywords or clear the search.',
+    }
+  }, [
+    rows.length,
+    tab,
+    assignedCount,
+    unassignedCount,
+    search,
+    searchTrimRolesDrawer,
+  ])
 
   const changeStats = useMemo(() => {
     const total = countSetDiff(committedSet, draftSet)
@@ -270,13 +295,30 @@ export function ManageRolesForPrivilegeDrawer({
     [assignIds],
   )
 
-  const bulkBulkAssignBarReplace = useMemo((): BulkAssignBarConfig | undefined => {
-    if (tab !== 1 || selectedOnUnassigned === 0) return undefined
-    return {
-      onDelete: (selectedIds: GridRowId[]) => handleAssignSelected(selectedIds),
-      label: (n: number) => `Assign ${n} ${n === 1 ? 'role' : 'roles'}`,
-    }
-  }, [tab, selectedOnUnassigned, handleAssignSelected])
+  const removeMultipleIds = useCallback((ids: string[]) => {
+    if (ids.length === 0) return
+    setDraftSet((prev) => {
+      const next = new Set(prev)
+      for (const id of ids) next.delete(id)
+      return next
+    })
+    setSelectionModel(emptySelection())
+    setPaginationModel((p) => ({ ...p, page: 0 }))
+  }, [])
+
+  const handleBulkDiscardRoles = useCallback(() => {
+    setSelectionModel(emptySelection())
+  }, [])
+
+  const confirmBulkAssignRoles = useCallback(() => {
+    if (tab !== 1 || selectionModel.type !== 'include') return
+    handleAssignSelected([...selectionModel.ids])
+  }, [tab, selectionModel, handleAssignSelected])
+
+  const confirmBulkRemoveRoles = useCallback(() => {
+    if (tab !== 0 || selectionModel.type !== 'include') return
+    removeMultipleIds([...selectionModel.ids].map(String))
+  }, [tab, selectionModel, removeMultipleIds])
 
   const discardAndDismiss = useCallback(
     (e?: SyntheticEvent) => {
@@ -578,6 +620,18 @@ export function ManageRolesForPrivilegeDrawer({
             />
           </Box>
 
+          <BulkDrawerSelectionToolbar
+            visible={
+              (tab === 1 && selectedOnUnassigned > 0) || (tab === 0 && selectedOnAssigned > 0)
+            }
+            kind={tab === 1 ? 'assign' : 'remove'}
+            selectedCount={tab === 1 ? selectedOnUnassigned : selectedOnAssigned}
+            nounSingular="role"
+            nounPlural="roles"
+            onConfirm={tab === 1 ? confirmBulkAssignRoles : confirmBulkRemoveRoles}
+            onDiscard={handleBulkDiscardRoles}
+          />
+
           <Box
             sx={{
               mx: -2,
@@ -598,13 +652,14 @@ export function ManageRolesForPrivilegeDrawer({
               '& .MuiDataGrid-root': { border: 'none' },
             }}
           >
+            {rolesDrawerListEmptyMessaging ? (
+              <RbacListEmptyPlaceholder roomy {...rolesDrawerListEmptyMessaging} />
+            ) : (
             <DataGrid
               key={`manage-roles-grid-${tab}`}
               showToolbar
               listView={false}
               sortingMode="client"
-              bulkDeleteConfig={bulkBulkAssignBarReplace}
-              className={tab === 1 && selectedOnUnassigned > 0 ? 'manage-roles-assign-bulk' : undefined}
               onRefresh={() => setPaginationModel((p) => ({ ...p, page: 0 }))}
               density="standard"
               rows={rows}
@@ -620,10 +675,8 @@ export function ManageRolesForPrivilegeDrawer({
               onRowSelectionModelChange={setSelectionModel}
               disableRowSelectionOnClick
               disableColumnMenu
-              hideFooterSelectedRowCount={tab === 0}
               sx={{
                 ...dataGridSx,
-                ...bulkAssignToolbarOverrideSx,
                 minWidth: { xs: 200, sm: 280 },
                 width: '100%',
                 maxWidth: '100%',
@@ -638,6 +691,7 @@ export function ManageRolesForPrivilegeDrawer({
                 },
               }}
             />
+            )}
           </Box>
         </Stack>
       </Drawer>

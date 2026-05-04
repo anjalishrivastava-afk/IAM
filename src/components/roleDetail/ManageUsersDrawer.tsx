@@ -15,7 +15,6 @@ import type { SlideProps } from '@mui/material/Slide'
 import type {
   GridColDef,
   GridRenderCellParams,
-  GridRowId,
   GridRowSelectionModel,
 } from '@mui/x-data-grid-pro'
 import type { Theme } from '@mui/material/styles'
@@ -41,6 +40,12 @@ import {
 import { USER_MANAGEMENT_ROLE_NAMES } from '../../data/userManagementRoles'
 import type { FilterRecords } from '../../types/filterRecords'
 import { avatarFillFromHue } from '../../utils/avatarSurface'
+import emptyAssignedHero from '../../assets/manage-users-drawer-empty-assigned.svg'
+import { BulkDrawerSelectionToolbar } from './BulkDrawerSelectionToolbar'
+import { RbacListEmptyPlaceholder, rbacQuotedSearch } from './RbacListEmptyPlaceholder'
+
+/** Used so the Assigned tab empty hero can vertically center inside the Drawer body without editing Signal DS Drawer internals (header/footer + body padding). */
+const DRAWER_EMPTY_HERO_VERTICAL_OFFSET_THEME_UNITS = 26
 
 /** Demo pool — “not assigned” when not overlapping with assigned names. */
 const NOT_ASSIGNED_SAMPLE = [
@@ -145,12 +150,6 @@ const DRAWER_WIDTH_PX = 726
 
 const ROW_TRANSITION_MS = 380
 
-/** Repurposes SDS bulk-delete toolbar row (styled below) as Assign n users + Discard. */
-type BulkAssignBulkBarConfig = {
-  onDelete: (selectedIds: GridRowId[]) => void
-  label?: string | ((selectedCount: number) => string)
-}
-
 function snackbarSlideUp(props: SlideProps) {
   return <Slide {...props} direction="up" />
 }
@@ -194,25 +193,6 @@ const dataGridSx = {
     animation: 'drawerRowExitToUnassigned 380ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
     pointerEvents: 'none',
     willChange: 'transform, opacity, filter',
-  },
-} as const
-
-const bulkAssignToolbarOverrideSx = {
-  /** Restyle SDS “bulk delete” toolbar row as outlined primary Assign n users. */
-  '&.manage-users-assign-bulk .MuiToolbar-root .MuiButton-textError': {
-    border: '1px solid',
-    borderColor: 'primary.main',
-    color: 'primary.main',
-    backgroundColor: 'transparent',
-    px: 1.75,
-    textTransform: 'none',
-    fontWeight: 600,
-    boxShadow: 'none',
-    '&:hover': {
-      backgroundColor: (theme: Theme) => `${theme.palette.primary.main}14`,
-      borderColor: 'primary.dark',
-      boxShadow: 'none',
-    },
   },
 } as const
 
@@ -346,6 +326,7 @@ export function ManageUsersDrawer({
   )
 
   const selectedOnNotAssigned = tab === 1 ? selectionSize(selectionModel) : 0
+  const selectedOnAssigned = tab === 0 ? selectionSize(selectionModel) : 0
 
   const changeStats = useMemo(() => {
     const base = baselineAssignedRef.current
@@ -368,6 +349,64 @@ export function ManageUsersDrawer({
 
   const assignedCount = draftAssigned.length
   const notAssignedCount = useMemo(() => notAssignedCatalog.length, [notAssignedCatalog])
+
+  const searchTrim = search.trim()
+  const hasNotAssignedToolbarRoleFilter =
+    Boolean(toolbarRoleFilter.mu_drawer_role) && toolbarRoleFilter.mu_drawer_role !== 'all'
+
+  /** Illustration + CTA only when Assigned tab is empty and the user is not searching. */
+  const showAssignedFullHero = tab === 0 && draftAssigned.length === 0 && !searchTrim
+
+  const drawerListEmptyMessaging = useMemo((): { title: string; description: string } | null => {
+    if (showAssignedFullHero || rows.length > 0) return null
+    if (tab === 0) {
+      if (draftAssigned.length === 0 && searchTrim) {
+        return {
+          title: 'No users assigned',
+          description: `Nothing matches ${rbacQuotedSearch(search) || 'that search'}. Clear the search or open the Not assigned tab to add users.`,
+        }
+      }
+      if (draftAssigned.length > 0 && filteredAssigned.length === 0) {
+        const quoted = rbacQuotedSearch(search)
+        if (searchTrim) {
+          return {
+            title: `No results for ${quoted || 'your search'}`,
+            description: 'Try different keywords or clear the search.',
+          }
+        }
+        return {
+          title: 'No matching users',
+          description: 'Clear the search to see all assigned users.',
+        }
+      }
+      return null
+    }
+    if (notAssignedCatalog.length === 0) {
+      return {
+        title: 'No users to assign',
+        description: 'There are no users in the unassigned pool for this session.',
+      }
+    }
+    return {
+      title: 'No matching users',
+      description: hasNotAssignedToolbarRoleFilter
+        ? 'Try adjusting your search or set the Role filter to All roles.'
+        : `Nothing matches ${rbacQuotedSearch(search) || 'that search'}. Try different keywords or clear the search.`,
+    }
+  }, [
+    showAssignedFullHero,
+    rows.length,
+    tab,
+    draftAssigned.length,
+    filteredAssigned.length,
+    search,
+    searchTrim,
+    notAssignedCatalog.length,
+    hasNotAssignedToolbarRoleFilter,
+  ])
+
+  /** Vertically anchor hero + textual empty states between tabs and footer. */
+  const stretchManageUsersMainColumn = Boolean(showAssignedFullHero || drawerListEmptyMessaging)
 
   const notifyAssignBulk = useCallback((count: number) => {
     setSnackbarMessage(`${count} user${count === 1 ? '' : 's'} assigned to the role`)
@@ -431,14 +470,49 @@ export function ManageUsersDrawer({
     [beginAssignTransition],
   )
 
-  /** SDS CustomToolbar swaps role filters for this bar when bulk row selection exists. Styled as outlined primary via parent Box.sx below. */
-  const bulkBulkAssignBarReplace = useMemo((): BulkAssignBulkBarConfig | undefined => {
-    if (tab !== 1 || selectedOnNotAssigned === 0) return undefined
-    return {
-      onDelete: (selectedIds: GridRowId[]) => handleAssignKeys(selectedIds.map((id) => String(id))),
-      label: (n: number) => `Assign ${n} ${n === 1 ? 'user' : 'users'}`,
-    }
-  }, [tab, selectedOnNotAssigned, handleAssignKeys])
+  const handleBulkDiscardSelection = useCallback(() => {
+    setSelectionModel(emptySelection())
+  }, [])
+
+  const beginBulkRemoveTransition = useCallback(
+    (idSet: Set<string>, namesFromRows: string[]) => {
+      if (namesFromRows.length === 0) return
+      setRowExit({ ids: idSet, kind: 'remove' })
+      window.setTimeout(() => {
+        const bulkLower = new Set(namesFromRows.map((n) => n.toLowerCase().trim()))
+        setDraftAssigned((prev) => prev.filter((n) => !bulkLower.has(n.toLowerCase().trim())))
+        setNotAssignedCatalog((prev) => [
+          ...prev,
+          ...namesFromRows.map((name, idx) => ({
+            key: `returned:${name}:${Date.now()}:${idx}`,
+            name,
+            displayId: displayUserId(name, prev.length + idx + 3),
+            roleLabel: roleDisplayName,
+          })),
+        ])
+        setSelectionModel(emptySelection())
+        setPaginationModel((p) => ({ ...p, page: 0 }))
+        setRowExit(null)
+        const n = namesFromRows.length
+        setSnackbarMessage(`${n} user${n === 1 ? '' : 's'} removed from the role`)
+        setSnackbarOpen(true)
+      }, ROW_TRANSITION_MS)
+    },
+    [roleDisplayName],
+  )
+
+  const confirmBulkRemoveFromRole = useCallback(() => {
+    if (tab !== 0 || selectionModel.type !== 'include') return
+    const ids = new Set([...selectionModel.ids].map(String))
+    if (ids.size === 0) return
+    const rowsHit = filteredAssigned.filter((r) => ids.has(r.id))
+    beginBulkRemoveTransition(new Set(rowsHit.map((r) => r.id)), rowsHit.map((r) => r.name))
+  }, [tab, selectionModel, filteredAssigned, beginBulkRemoveTransition])
+
+  const confirmBulkAssignToRole = useCallback(() => {
+    if (tab !== 1 || selectionModel.type !== 'include') return
+    beginAssignTransition(new Set([...selectionModel.ids].map(String)))
+  }, [tab, selectionModel, beginAssignTransition])
 
   const handleRemoveFromAssigned = useCallback(
     (name: string) => {
@@ -495,6 +569,10 @@ export function ManageUsersDrawer({
     setPaginationModel((p) => ({ ...p, page: 0 }))
     setSelectionModel(emptySelection())
   }, [])
+
+  const switchToNotAssignedTab = useCallback(() => {
+    handleTabChange({} as SyntheticEvent, 1)
+  }, [handleTabChange])
 
   const columns: GridColDef<GridRowData>[] = useMemo(() => {
     const nameCol: GridColDef<GridRowData> = {
@@ -687,8 +765,18 @@ export function ManageUsersDrawer({
           </Fragment>
         }
       >
-        <Stack spacing={2}>
-          <Box sx={{ mx: -2, mt: -1 }}>
+        <Stack
+          spacing={2}
+          sx={(theme: Theme) => ({
+            display: 'flex',
+            flexDirection: 'column',
+            ...(stretchManageUsersMainColumn && {
+              minHeight: `calc(100dvh - ${theme.spacing(DRAWER_EMPTY_HERO_VERTICAL_OFFSET_THEME_UNITS)})`,
+              minWidth: 0,
+            }),
+          })}
+        >
+          <Box sx={{ mx: -2, mt: -1, flexShrink: 0 }}>
             <Tabs
               value={tab}
               onChange={handleTabChange}
@@ -711,12 +799,14 @@ export function ManageUsersDrawer({
             </Tabs>
           </Box>
 
+          {!showAssignedFullHero && (
           <Box
             sx={{
               bgcolor: 'surface.elevation1',
               mx: -2,
               px: 2,
               py: (theme: Theme) => theme.spacing(1.5),
+              flexShrink: 0,
             }}
           >
             <EnhancedTextField
@@ -737,36 +827,92 @@ export function ManageUsersDrawer({
               }}
             />
           </Box>
+          )}
+
+          <BulkDrawerSelectionToolbar
+            visible={
+              (tab === 1 && selectedOnNotAssigned > 0) || (tab === 0 && selectedOnAssigned > 0)
+            }
+            kind={tab === 1 ? 'assign' : 'remove'}
+            selectedCount={tab === 1 ? selectedOnNotAssigned : selectedOnAssigned}
+            nounSingular="user"
+            nounPlural="users"
+            onConfirm={tab === 1 ? confirmBulkAssignToRole : confirmBulkRemoveFromRole}
+            onDiscard={handleBulkDiscardSelection}
+          />
 
           <Box
             sx={{
               mx: -2,
               flex: 1,
-              minHeight: 360,
+              minHeight: stretchManageUsersMainColumn ? 0 : 360,
               minWidth: 0,
               width: '100%',
               display: 'flex',
               flexDirection: 'column',
-              '& > div': {
-                width: '100%',
-                minWidth: 0,
-                flex: 1,
-                minHeight: 0,
-                display: 'flex',
-                flexDirection: 'column',
-              },
-              '& .MuiDataGrid-root': { border: 'none' },
+              ...(stretchManageUsersMainColumn
+                ? {
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }
+                : {
+                    '& > div': {
+                      width: '100%',
+                      minWidth: 0,
+                      flex: 1,
+                      minHeight: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                    },
+                    '& .MuiDataGrid-root': { border: 'none' },
+                  }),
             }}
           >
+            {showAssignedFullHero ? (
+              <Stack
+                alignItems="center"
+                spacing={2}
+                sx={{
+                  width: '100%',
+                  maxWidth: 420,
+                  px: 3,
+                  py: 5,
+                  mx: 'auto',
+                  boxSizing: 'border-box',
+                  textAlign: 'center',
+                }}
+              >
+                <Box
+                  component="img"
+                  src={emptyAssignedHero}
+                  alt=""
+                  sx={{ width: '100%', maxWidth: 358, height: 'auto', display: 'block' }}
+                />
+                <Typography variant="title3" component="p" sx={{ fontWeight: 700, lineHeight: 1.4 }}>
+                  Assign your team members to this role
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.43 }}>
+                  You haven&apos;t assigned anyone yet. Start by adding users to get things rolling.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  size="medium"
+                  startIconProps={{ name: 'plus', size: 'sm' }}
+                  sx={{ textTransform: 'none', fontWeight: 600, mt: 0.5 }}
+                  onClick={switchToNotAssignedTab}
+                >
+                  Assign Users
+                </Button>
+              </Stack>
+            ) : drawerListEmptyMessaging ? (
+              <RbacListEmptyPlaceholder roomy {...drawerListEmptyMessaging} />
+            ) : (
             <DataGrid
               key={`manage-users-grid-${tab}`}
               showToolbar
               listView={false}
               sortingMode="client"
-              bulkDeleteConfig={bulkBulkAssignBarReplace}
-              className={
-                tab === 1 && selectedOnNotAssigned > 0 ? 'manage-users-assign-bulk' : undefined
-              }
               customToolbarFilters={
                 tab === 1 && selectedOnNotAssigned === 0 ? notAssignedToolbarFilters : []
               }
@@ -794,10 +940,8 @@ export function ManageUsersDrawer({
               }}
               disableRowSelectionOnClick
               disableColumnMenu
-              hideFooterSelectedRowCount={tab === 0}
               sx={{
                 ...dataGridSx,
-                ...bulkAssignToolbarOverrideSx,
                 minWidth: { xs: 200, sm: 280 },
                 width: '100%',
                 maxWidth: '100%',
@@ -812,6 +956,7 @@ export function ManageUsersDrawer({
                 },
               }}
             />
+            )}
           </Box>
         </Stack>
       </Drawer>

@@ -15,6 +15,7 @@ import {
   Stack,
   Typography,
 } from '@exotel-npm-dev/signal-design-system'
+import { RbacListEmptyPlaceholder, rbacQuotedSearch } from './RbacListEmptyPlaceholder'
 
 const VIEW_MODE_TOOLTIP = 'You are in view mode'
 
@@ -86,6 +87,10 @@ export interface ChipExpandSectionProps<T extends { label: string; keyStr: strin
   renderChip: (item: T, index: number) => ReactElement
   collapseExpandLabelCollapsed: string
   editMode: boolean
+  /** Count before applying `search` — drives empty-state copy when the chip row is blank. */
+  sourceTotalCount?: number
+  /** Plural noun for messaging, e.g. "users" / "roles". */
+  emptyListNounPlural?: string
 }
 
 export function ChipExpandSection<T extends { label: string; keyStr: string }>({
@@ -103,12 +108,41 @@ export function ChipExpandSection<T extends { label: string; keyStr: string }>({
   renderChip,
   collapseExpandLabelCollapsed,
   editMode,
+  sourceTotalCount,
+  emptyListNounPlural,
 }: ChipExpandSectionProps<T>) {
   const truncated = filteredItems.length > collapsedCap
   const showExpandControl = truncated
   const displayItems =
     expanded || !truncated ? filteredItems : filteredItems.slice(0, collapsedCap)
   const remainder = truncated && !expanded ? filteredItems.length - collapsedCap : 0
+
+  const chipZoneEmptyMessaging = (() => {
+    if (displayItems.length > 0) return null
+    const qTrim = search.trim()
+    const quoted = rbacQuotedSearch(search)
+    if (sourceTotalCount !== undefined && emptyListNounPlural) {
+      if (sourceTotalCount === 0) {
+        return {
+          title: `No ${emptyListNounPlural} assigned yet`,
+          description: editMode
+            ? `Click ${manageLabel} to assign ${emptyListNounPlural}.`
+            : `Switch to edit mode and use ${manageLabel} to assign ${emptyListNounPlural}.`,
+        }
+      }
+      return {
+        title: quoted ? `No results for ${quoted}` : 'No matching results',
+        description: 'Try different keywords or clear the search.',
+      }
+    }
+    if (qTrim) {
+      return {
+        title: quoted ? `No results for ${quoted}` : 'No matching results',
+        description: 'Try different keywords or clear the search.',
+      }
+    }
+    return null
+  })()
 
   return (
     <>
@@ -187,14 +221,32 @@ export function ChipExpandSection<T extends { label: string; keyStr: string }>({
               flexWrap: 'wrap',
               gap: 1,
               alignItems: 'center',
+              minHeight: displayItems.length === 0 ? 52 : undefined,
             }}
           >
-            {displayItems.map((item, i) => (
-              <Fragment key={item.keyStr}>{renderChip(item, i)}</Fragment>
-            ))}
-            {remainder > 0 ? (
-              <Chip size="small" variant="filled" label={`+${remainder}`} color="default" />
-            ) : null}
+            {chipZoneEmptyMessaging ? (
+              <Box sx={{ width: '100%' }}>
+                <RbacListEmptyPlaceholder
+                  title={chipZoneEmptyMessaging.title}
+                  description={chipZoneEmptyMessaging.description}
+                  sx={{
+                    py: 0.5,
+                    px: 0,
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                  }}
+                />
+              </Box>
+            ) : (
+              <>
+                {displayItems.map((item, i) => (
+                  <Fragment key={item.keyStr}>{renderChip(item, i)}</Fragment>
+                ))}
+                {remainder > 0 ? (
+                  <Chip size="small" variant="filled" label={`+${remainder}`} color="default" />
+                ) : null}
+              </>
+            )}
           </Box>
 
           {showExpandControl ? (

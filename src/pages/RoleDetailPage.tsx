@@ -37,6 +37,7 @@ import {
 import { ManageUsersDrawer } from '../components/roleDetail/ManageUsersDrawer'
 import { DetailPageLoadingSkeleton } from '../components/rbac/DetailPageLoadingSkeleton'
 import { ManagePrivilegeSetsDrawer } from '../components/roleDetail/ManagePrivilegeSetsDrawer'
+import { RbacListEmptyPlaceholder, rbacQuotedSearch } from '../components/roleDetail/RbacListEmptyPlaceholder'
 import {
   ChipExpandSection,
   ViewModeDisabledWrap,
@@ -168,6 +169,29 @@ function ChipExpandPrivileges({
   const remainder = truncated && !expanded ? filtered.length - ROLE_DETAIL_COLLAPSED_CHIP_CAP : 0
   const showExpandControl = truncated
 
+  const chipZoneEmptyMessaging = (() => {
+    if (displayItems.length > 0) return null
+    const quoted = rbacQuotedSearch(search)
+    const qTrim = search.trim()
+    const total = privilegeSets.length
+    const nounPlural = 'privilege sets'
+    if (total === 0) {
+      return {
+        title: `No ${nounPlural} assigned yet`,
+        description: editMode
+          ? `Click Manage to assign ${nounPlural}.`
+          : `Switch to edit mode and use Manage to assign ${nounPlural}.`,
+      }
+    }
+    if (qTrim) {
+      return {
+        title: quoted ? `No results for ${quoted}` : 'No matching results',
+        description: 'Try different keywords or clear the search.',
+      }
+    }
+    return null
+  })()
+
   return (
     <>
       <Box sx={SECTION_ROW_LAYOUT}>
@@ -239,13 +263,30 @@ function ChipExpandPrivileges({
             </ViewModeDisabledWrap>
           </Stack>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-            {displayItems.map(({ label, keyStr }) => (
-              <Chip key={keyStr} size="small" label={label} variant="tonal" color="default" />
-            ))}
-            {remainder > 0 ? (
-              <Chip size="small" variant="filled" label={`+${remainder}`} color="default" />
-            ) : null}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center', minHeight: displayItems.length === 0 ? 52 : undefined }}>
+            {chipZoneEmptyMessaging ? (
+              <Box sx={{ width: '100%' }}>
+                <RbacListEmptyPlaceholder
+                  title={chipZoneEmptyMessaging.title}
+                  description={chipZoneEmptyMessaging.description}
+                  sx={{
+                    py: 0.5,
+                    px: 0,
+                    alignItems: 'flex-start',
+                    textAlign: 'left',
+                  }}
+                />
+              </Box>
+            ) : (
+              <>
+                {displayItems.map(({ label, keyStr }) => (
+                  <Chip key={keyStr} size="small" label={label} variant="tonal" color="default" />
+                ))}
+                {remainder > 0 ? (
+                  <Chip size="small" variant="filled" label={`+${remainder}`} color="default" />
+                ) : null}
+              </>
+            )}
           </Box>
 
           {showExpandControl ? (
@@ -624,6 +665,8 @@ export function RoleDetailPage({
             renderChip={(item) => <AssignedUserChip name={item.label} />}
             collapseExpandLabelCollapsed="View all users"
             editMode={editMode}
+            sourceTotalCount={effectiveAssignedUsers.length}
+            emptyListNounPlural="users"
           />
 
           <ChipExpandPrivileges
