@@ -139,12 +139,60 @@ function Card03Preview() {
         <Box sx={{ width: 10, height: 10, borderRadius: '50%', border: '2px dashed', borderColor: 'warning.main' }} />
         <Box sx={{ width: 28, height: 14, borderRadius: 1, bgcolor: 'grey.300', border: '1px dashed warning.main' }} />
         <Box sx={{ width: 28, height: 14, borderRadius: 1, bgcolor: 'grey.300', border: '1px dashed warning.main' }} />
-        <Box sx={{ width: 36, height: 14, borderRadius: 1, bgcolor: 'grey.300', border: '1px dashed warning.main' }} />
-        <Box sx={{ width: 48, height: 14, borderRadius: 1, bgcolor: 'primary.main', opacity: 0.35, outline: '2px solid', outlineColor: 'primary.main', outlineOffset: 1 }} />
+        <Box sx={{ width: 48, height: 14, borderRadius: 1, bgcolor: 'primary.main', opacity: 0.45 }} />
       </Box>
-      <Box sx={{ px: 1, pb: 1 }}>
-        <Box sx={{ height: 50, bgcolor: 'background.paper', borderRadius: 1, border: '1px solid', borderColor: 'divider' }} />
-      </Box>
+      <Stack spacing={0.5} sx={{ px: 1, pb: 1 }}>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{
+            bgcolor: 'background.paper',
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+            px: 0.75,
+            py: 0.6,
+          }}
+        >
+          <Box sx={{ flex: 1, height: 10, bgcolor: 'grey.200', borderRadius: 0.5, maxWidth: '55%' }} />
+          <Box
+            sx={{
+              width: 22,
+              height: 14,
+              borderRadius: 1,
+              bgcolor: 'grey.100',
+              border: '1px dashed',
+              borderColor: 'text.disabled',
+            }}
+          />
+        </Stack>
+        <Stack
+          direction="row"
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{
+            bgcolor: 'background.paper',
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
+            px: 0.75,
+            py: 0.6,
+          }}
+        >
+          <Box sx={{ flex: 1, height: 10, bgcolor: 'grey.200', borderRadius: 0.5, maxWidth: '55%' }} />
+          <Box
+            sx={{
+              width: 22,
+              height: 14,
+              borderRadius: 1,
+              bgcolor: 'grey.100',
+              border: '1px dashed',
+              borderColor: 'text.disabled',
+            }}
+          />
+        </Stack>
+      </Stack>
       <Box
         sx={{
           position: 'absolute',
@@ -230,7 +278,8 @@ const PATTERNS: PatternMeta[] = [
     num: '03',
     tag: 'Campaign',
     title: 'Campaign details',
-    description: 'Same User Management shell as production — Roles & Privilege Sets grids, filters, and row navigation.',
+    description:
+      'Campaign shell — Publish stays global; Basic Settings and Channel Configuration each have their own Edit and sticky save footer (RBAC-scoped sections). Roles and Privilege Sets grids unchanged.',
     to: `${RBAC_IMPACT_BASE}/pattern/multi-action`,
     preview: <Card03Preview />,
   },

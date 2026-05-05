@@ -145,11 +145,14 @@ export function CampaignBasicSettingsPanel({
   form,
   onPatch,
   onNavigateSection,
+  onSectionEdit,
 }: {
   viewOnly: boolean
   form: CampaignBasicFormState
   onPatch: (patch: Partial<CampaignBasicFormState>) => void
   onNavigateSection: (navKey: string) => void
+  /** RBAC UX: Edit at section scope (campaign shell only). */
+  onSectionEdit?: () => void
 }) {
   return (
     <Box
@@ -173,25 +176,38 @@ export function CampaignBasicSettingsPanel({
               Enter the core information to define and identify your campaign
             </Typography>
           </Box>
-          <ViewModeDisabledWrap viewOnly={viewOnly} wrapperSx={{ flexShrink: 0 }}>
-            <Button
-              variant="tonal"
-              color="primary"
-              size="medium"
-              startIconProps={{ name: 'copy-simple', size: 'sm' }}
-              disabled={viewOnly}
-              onClick={() => {
-                onPatch({
-                  scheduleEnabled: false,
-                  dispositionPlan: '',
-                  acwDuration: '',
-                  timezoneMapperType: '',
-                })
-              }}
-            >
-              Copy from other Campaigns
-            </Button>
-          </ViewModeDisabledWrap>
+          <Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
+            {viewOnly && onSectionEdit ?
+              <Button
+                variant="outlined"
+                color="neutral"
+                size="medium"
+                startIcon={<Icon name="pencil-simple-line" size="sm" />}
+                onClick={() => onSectionEdit()}
+              >
+                Edit
+              </Button>
+            : null}
+            <ViewModeDisabledWrap viewOnly={viewOnly} wrapperSx={{ flexShrink: 0 }}>
+              <Button
+                variant="tonal"
+                color="primary"
+                size="medium"
+                startIconProps={{ name: 'copy-simple', size: 'sm' }}
+                disabled={viewOnly}
+                onClick={() => {
+                  onPatch({
+                    scheduleEnabled: false,
+                    dispositionPlan: '',
+                    acwDuration: '',
+                    timezoneMapperType: '',
+                  })
+                }}
+              >
+                Copy from other Campaigns
+              </Button>
+            </ViewModeDisabledWrap>
+          </Stack>
         </Stack>
 
         <Divider />

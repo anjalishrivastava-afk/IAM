@@ -12,6 +12,7 @@ import {
 } from '@exotel-npm-dev/signal-design-system'
 import { clearPlaygroundSession } from '../auth/playgroundSession'
 import { ArchbeeDocsWidget } from '../components/ArchbeeDocsWidget'
+import { AiChatAssistLayoutDock, AiChatAssistProvider } from '../context/AiChatAssistLayoutContext'
 // import { BRAND_LOGO } from '../constants/app'
 import brandLogoLight from '../assets/exotel-playground-logo-light.svg'
 import brandLogoDark from '../assets/exotel-playground-logo-dark.svg'
@@ -146,8 +147,9 @@ export function AppLayout() {
   const navSections = useMemo(() => buildNavSections(navigate), [navigate])
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <ExoAppBar
+    <AiChatAssistProvider>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+        <ExoAppBar
         appLauncherProps={{
           type: 'default',
           iconName: 'squares-four',
@@ -205,25 +207,37 @@ export function AppLayout() {
           },
         }}
         onNotificationClick={() => {}}
-      />
-      <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        <Navigation items={navSections} />
+        />
         <Box
           sx={{
-            flex: 1,
-            /** Required so nested pages (flex children + DataGrid) resolve non-zero horizontal width — see @mui/x useResizeContainer. */
-            minWidth: 0,
-            bgcolor: 'surface.elevation0',
-            p: 1,
-            overflow: 'auto',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: { xs: 'column', md: 'row' },
+            flex: 1,
+            minHeight: 0,
+            minWidth: 0,
+            overflow: 'hidden',
           }}
         >
-          <Outlet />
+          <Navigation items={navSections} />
+          <Box
+            sx={{
+              minWidth: 0,
+              minHeight: 0,
+              flex: { xs: 1, md: '1 1 auto' },
+              bgcolor: 'surface.elevation0',
+              p: 1,
+              overflow: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              order: { xs: 1, md: 1 },
+            }}
+          >
+            <Outlet />
+          </Box>
+          <AiChatAssistLayoutDock />
         </Box>
-      </Box>
       <ArchbeeDocsWidget />
     </Box>
+    </AiChatAssistProvider>
   )
 }

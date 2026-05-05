@@ -150,12 +150,14 @@ export function CampaignChannelConfigurationPanel({
   onPatch,
   channelTab,
   onChannelTabChange,
+  onSectionEdit,
 }: {
   viewOnly: boolean
   form: CampaignChannelFormState
   onPatch: (patch: Partial<CampaignChannelFormState>) => void
   channelTab: ChannelTabKey
   onChannelTabChange: (k: ChannelTabKey) => void
+  onSectionEdit?: () => void
 }) {
   return (
     <Box
@@ -180,20 +182,33 @@ export function CampaignChannelConfigurationPanel({
                 Select communication channel and configure channel settings
               </Typography>
             </Box>
-            <ViewModeDisabledWrap viewOnly={viewOnly} wrapperSx={{ flexShrink: 0 }}>
-              <Button
-                variant="tonal"
-                color="primary"
-                size="medium"
-                startIconProps={{ name: 'copy-simple', size: 'sm' }}
-                disabled={viewOnly}
-                onClick={() => {
-                  onPatch({ ...INITIAL_CAMPAIGN_CHANNEL_FORM })
-                }}
-              >
-                Copy from other Campaigns
-              </Button>
-            </ViewModeDisabledWrap>
+            <Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
+              {viewOnly && onSectionEdit ?
+                <Button
+                  variant="outlined"
+                  color="neutral"
+                  size="medium"
+                  startIcon={<Icon name="pencil-simple-line" size="sm" />}
+                  onClick={() => onSectionEdit()}
+                >
+                  Edit
+                </Button>
+              : null}
+              <ViewModeDisabledWrap viewOnly={viewOnly} wrapperSx={{ flexShrink: 0 }}>
+                <Button
+                  variant="tonal"
+                  color="primary"
+                  size="medium"
+                  startIconProps={{ name: 'copy-simple', size: 'sm' }}
+                  disabled={viewOnly}
+                  onClick={() => {
+                    onPatch({ ...INITIAL_CAMPAIGN_CHANNEL_FORM })
+                  }}
+                >
+                  Copy from other Campaigns
+                </Button>
+              </ViewModeDisabledWrap>
+            </Stack>
           </Stack>
 
           <Box sx={{ mx: -1.5 }}>

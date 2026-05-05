@@ -1,6 +1,8 @@
 /**
  * Express API — RBAC playground backend (SQLite).
  */
+import './load-env.js'
+
 import express from 'express'
 import cors from 'cors'
 import { randomUUID } from 'node:crypto'
@@ -8,6 +10,9 @@ import { randomUUID } from 'node:crypto'
 import { getDb } from './db.js'
 import { formatCreatedAtLabel, nowIso } from './format.js'
 import { buildMinimalCategoriesForNewPs, insertPrivilegeTree, runSeed, seedIfEmpty, wipeDatabase } from './seed.js'
+import { registerCopilotRoutes } from './copilot/copilotRoutes.js'
+import { searchAssignableUsers } from './userSearch.js'
+import { removeUsersFromOtherRoles } from './roleAssignments.js'
 
 const PORT = Number(process.env.PORT ?? 3333)
 
@@ -16,6 +21,23 @@ app.use(cors({ origin: true }))
 app.use(express.json({ limit: '2mb' }))
 
 seedIfEmpty()
+
+registerCopilotRoutes(app)
+
+/** Mock directory + RBAC-assignee identities (mentions / picker + copilot parity) */
+app.get('/api/users', (req, res) => {
+  const q = typeof req.query.q === 'string' ? req.query.q : ''
+  const { users } = searchAssignableUsers(getDb(), q)
+  res.json(
+    users.map((u) => ({
+      id: u.id,
+      displayName: u.displayName,
+      email: u.email || null,
+      branch: u.branch ?? null,
+      source: u.source,
+    })),
+  )
+})
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, service: 'rbac-prototype-api' })
@@ -186,19 +208,22 @@ app.patch('/api/roles/:id/users', (req, res) => {
   }
 
   const rid = req.params.id
+  const names = userNames as string[]
+  const t = nowIso()
   const tx = db.transaction(() => {
+    removeUsersFromOtherRoles(db, rid, names, t)
     db.prepare(`DELETE FROM role_assigned_user WHERE role_id = ?`).run(rid)
     let order = 0
     const ins = db.prepare(`
       INSERT INTO role_assigned_user (id, role_id, user_name, sort_order)
       VALUES (?, ?, ?, ?)
     `)
-    for (const userName of userNames as string[]) {
+    for (const userName of names) {
       ins.run(`rau-${rid}-${order}`, rid, userName, order++)
     }
     db.prepare(`UPDATE role SET assigned_user_count = ?, updated_at = ? WHERE id = ?`).run(
-      userNames.length,
-      nowIso(),
+      names.length,
+      t,
       rid,
     )
   })

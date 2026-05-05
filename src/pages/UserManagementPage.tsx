@@ -54,11 +54,14 @@ import {
   createPrivilegeSet,
   createRole,
 } from '../api/rbacApi'
+import { RBAC_LISTS_REFRESH_EVENT } from '../constants/rbacEvents'
 import type { UserManagementRoleRow } from '../data/userManagementRoles'
 import type { PrivilegeSetRow } from '../data/privilegeSets'
 import type { FilterRecords } from '../types/filterRecords'
+import { useAiChatAssistLayout } from '../context/AiChatAssistLayoutContext'
+import { RbacDataGridPageHeader } from '../components/rbac/RbacDataGridPageHeader'
 import { SIGNAL_NAV_WIDTH_EXPANDED_PX } from './rbacUiImpact/constants'
-import { DirtyPulseLabel } from './rbacUiImpact/shared'
+import { DirtyPulseLabel, DiscardChangesDialog } from './rbacUiImpact/shared'
 import {
   CampaignBasicSettingsPanel,
   INITIAL_CAMPAIGN_BASIC_FORM,
@@ -72,22 +75,8 @@ import {
   type ChannelTabKey,
 } from './campaign/CampaignChannelConfigurationPanel'
 
-type CampaignEditBaseline = {
-  basic: CampaignBasicFormState
-  channel: CampaignChannelFormState
-}
-
-const INITIAL_CAMPAIGN_EDIT_BASELINE: CampaignEditBaseline = {
-  basic: INITIAL_CAMPAIGN_BASIC_FORM,
-  channel: INITIAL_CAMPAIGN_CHANNEL_FORM,
-}
-
 function serializeCampaignBasicForm(form: CampaignBasicFormState): string {
   return JSON.stringify(form)
-}
-
-function serializeCampaignEditBaseline(b: CampaignEditBaseline): string {
-  return `${serializeCampaignBasicForm(b.basic)}||${serializeCampaignChannelForm(b.channel)}`
 }
 
 export type UserManagementPageVariant = 'rbac' | 'campaign'
@@ -113,6 +102,9 @@ type CampaignNavKey =
   | 'intents-entities'
   | 'map-intents'
   | 'advanced-options'
+
+/** Secondary areas that have their own Edit (RBAC UI — not a single global Edit). */
+type CampaignEditableSection = 'basic-settings' | 'channel-config'
 
 const CAMPAIGN_NAV: ReadonlyArray<{ key: CampaignNavKey; title: string; caption: string }> = [
   { key: 'basic-settings', title: 'Basic Settings', caption: 'Basic Campaign Info & Setup' },
@@ -482,6 +474,8 @@ export function UserManagementPage({
   const [privilegeRows, setPrivilegeRows] = useState<PrivilegeSetRow[]>([])
   const [listError, setListError] = useState<string | null>(null)
 
+  const { openChat, closeChat } = useAiChatAssistLayout()
+
   const [newRoleOpen, setNewRoleOpen] = useState(false)
   const [newRoleName, setNewRoleName] = useState('')
   const [newRoleDesc, setNewRoleDesc] = useState('')
@@ -491,7 +485,14 @@ export function UserManagementPage({
   const [newPsDesc, setNewPsDesc] = useState('')
 
   const isCampaign = variant === 'campaign'
-  const [campaignEditing, setCampaignEditing] = useState(false)
+  const [campaignEditingSection, setCampaignEditingSection] =
+    useState<CampaignEditableSection | null>(null)
+  const [campaignBasicEditBaseline, setCampaignBasicEditBaseline] =
+    useState<CampaignBasicFormState>(INITIAL_CAMPAIGN_BASIC_FORM)
+  const [campaignChannelEditBaseline, setCampaignChannelEditBaseline] =
+    useState<CampaignChannelFormState>(INITIAL_CAMPAIGN_CHANNEL_FORM)
+  const [campaignNavDiscardOpen, setCampaignNavDiscardOpen] = useState(false)
+  const [pendingCampaignNavKey, setPendingCampaignNavKey] = useState<CampaignNavKey | null>(null)
   const [campaignHeaderMenuAnchor, setCampaignHeaderMenuAnchor] = useState<null | HTMLElement>(null)
   const [saveFooterMenuOpen, setSaveFooterMenuOpen] = useState(false)
   const splitSaveFooterRef = useRef<HTMLDivElement | null>(null)
@@ -519,9 +520,6 @@ export function UserManagementPage({
   const [campaignChannelPublished, setCampaignChannelPublished] = useState<CampaignChannelFormState>(
     INITIAL_CAMPAIGN_CHANNEL_FORM,
   )
-  /** Footer dirty count: baseline captures both Basic + Channel while editing until Save/Cancel. */
-  const [campaignEditBaseline, setCampaignEditBaseline] =
-    useState<CampaignEditBaseline>(INITIAL_CAMPAIGN_EDIT_BASELINE)
 
   /** Call / WhatsApp / … tabs inside Channel Configuration (Figma strip). */
   const [campaignChannelUiTab, setCampaignChannelUiTab] = useState<ChannelTabKey>('call')
@@ -534,24 +532,33 @@ export function UserManagementPage({
     setCampaignChannelForm((f) => ({ ...f, ...patch }))
   }, [])
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        setListError(null)
-        const [r, p] = await Promise.all([fetchRoles(), fetchPrivilegeSets()])
-        if (!cancelled) {
-          setRoleRows(r)
-          setPrivilegeRows(p)
-        }
-      } catch (e) {
-        if (!cancelled) setListError(e instanceof Error ? e.message : 'Failed to load RBAC data')
-      }
-    })()
-    return () => {
-      cancelled = true
+  const UM_LIST_PATH = '/closed-interaction/user-management'
+
+  const reloadRbacsLists = useCallback(async () => {
+    try {
+      setListError(null)
+      const [r, p] = await Promise.all([fetchRoles(), fetchPrivilegeSets()])
+      setRoleRows(r)
+      setPrivilegeRows(p)
+    } catch (e) {
+      setListError(e instanceof Error ? e.message : 'Failed to load RBAC data')
     }
   }, [])
+
+  useEffect(() => {
+    if (variant === 'campaign') {
+      void reloadRbacsLists()
+      return
+    }
+    if (location.pathname !== UM_LIST_PATH) return
+    void reloadRbacsLists()
+  }, [variant, location.pathname, reloadRbacsLists])
+
+  useEffect(() => {
+    const h = () => void reloadRbacsLists()
+    window.addEventListener(RBAC_LISTS_REFRESH_EVENT, h)
+    return () => window.removeEventListener(RBAC_LISTS_REFRESH_EVENT, h)
+  }, [reloadRbacsLists])
 
   useEffect(() => {
     return () => {
@@ -1031,15 +1038,30 @@ export function UserManagementPage({
   const showCampaignBasicSettings = isCampaign && section === 'basic-settings'
   const showCampaignChannelConfig = isCampaign && section === 'channel-config'
 
+  useEffect(() => {
+    if (!showRbacRolesGrid) closeChat()
+  }, [showRbacRolesGrid, closeChat])
+
   const campaignFooterDirtyCount = useMemo(() => {
-    if (!isCampaign || !campaignEditing) return 0
-    return serializeCampaignEditBaseline({
-      basic: campaignBasicForm,
-      channel: campaignChannelForm,
-    }) === serializeCampaignEditBaseline(campaignEditBaseline)
+    if (!isCampaign || !campaignEditingSection) return 0
+    if (campaignEditingSection === 'basic-settings') {
+      return serializeCampaignBasicForm(campaignBasicForm) ===
+        serializeCampaignBasicForm(campaignBasicEditBaseline)
+        ? 0
+        : 1
+    }
+    return serializeCampaignChannelForm(campaignChannelForm) ===
+      serializeCampaignChannelForm(campaignChannelEditBaseline)
       ? 0
       : 1
-  }, [campaignBasicForm, campaignChannelForm, campaignEditing, campaignEditBaseline, isCampaign])
+  }, [
+    isCampaign,
+    campaignEditingSection,
+    campaignBasicForm,
+    campaignBasicEditBaseline,
+    campaignChannelForm,
+    campaignChannelEditBaseline,
+  ])
 
   const campaignDirtyVsSaved = useMemo(
     () =>
@@ -1085,49 +1107,92 @@ export function UserManagementPage({
     [handleCampaignHeaderMenuClose],
   )
 
-  const handleCampaignEdit = useCallback(() => {
-    setCampaignEditBaseline({
-      basic: { ...campaignBasicForm },
-      channel: { ...campaignChannelForm },
-    })
-    setCampaignEditing(true)
-    setSection('basic-settings')
-  }, [campaignBasicForm, campaignChannelForm])
+  const revertCampaignEditInFlight = useCallback(() => {
+    if (campaignEditingSection === 'basic-settings') {
+      setCampaignBasicForm({ ...campaignBasicEditBaseline })
+    } else if (campaignEditingSection === 'channel-config') {
+      setCampaignChannelForm({ ...campaignChannelEditBaseline })
+    }
+  }, [campaignEditingSection, campaignBasicEditBaseline, campaignChannelEditBaseline])
+
+  const handleCampaignBeginBasicEdit = useCallback(() => {
+    setCampaignBasicEditBaseline({ ...campaignBasicForm })
+    setCampaignEditingSection('basic-settings')
+  }, [campaignBasicForm])
+
+  const handleCampaignBeginChannelEdit = useCallback(() => {
+    setCampaignChannelEditBaseline({ ...campaignChannelForm })
+    setCampaignEditingSection('channel-config')
+  }, [campaignChannelForm])
+
+  const requestCampaignSection = useCallback(
+    (next: CampaignNavKey) => {
+      if (section === next) return
+      const hasUnsaved =
+        !!campaignEditingSection &&
+        campaignFooterDirtyCount > 0
+      if (isCampaign && hasUnsaved) {
+        setPendingCampaignNavKey(next)
+        setCampaignNavDiscardOpen(true)
+        return
+      }
+      setSection(next)
+    },
+    [section, campaignEditingSection, campaignFooterDirtyCount, isCampaign],
+  )
+
+  const handleCampaignNavDiscardConfirm = useCallback(() => {
+    if (pendingCampaignNavKey == null) return
+    revertCampaignEditInFlight()
+    setCampaignEditingSection(null)
+    setSection(pendingCampaignNavKey)
+    setPendingCampaignNavKey(null)
+    setCampaignNavDiscardOpen(false)
+  }, [pendingCampaignNavKey, revertCampaignEditInFlight])
 
   const handleCampaignCancelFooter = useCallback(() => {
-    setCampaignBasicForm({ ...campaignEditBaseline.basic })
-    setCampaignChannelForm({ ...campaignEditBaseline.channel })
-    setCampaignEditing(false)
+    revertCampaignEditInFlight()
+    setCampaignEditingSection(null)
     setSaveFooterMenuOpen(false)
-  }, [campaignEditBaseline])
+  }, [revertCampaignEditInFlight])
 
   const handleCampaignPersistSaveOnly = useCallback(() => {
-    const basic = { ...campaignBasicForm }
-    const channel = { ...campaignChannelForm }
-    setCampaignBasicSaved(basic)
-    setCampaignChannelSaved(channel)
-    const nextBaseline: CampaignEditBaseline = { basic, channel }
-    setCampaignEditBaseline(nextBaseline)
+    if (!campaignEditingSection) return
+    if (campaignEditingSection === 'basic-settings') {
+      const basic = { ...campaignBasicForm }
+      setCampaignBasicSaved(basic)
+      setCampaignBasicEditBaseline(basic)
+      setCampaignSnackbarMessage('Basic settings saved')
+    } else {
+      const channel = { ...campaignChannelForm }
+      setCampaignChannelSaved(channel)
+      setCampaignChannelEditBaseline(channel)
+      setCampaignSnackbarMessage('Channel configuration saved')
+    }
     setSaveFooterMenuOpen(false)
-    setCampaignEditing(false)
-    setCampaignSnackbarMessage('Campaign saved')
+    setCampaignEditingSection(null)
     setCampaignSnackbarOpen(true)
-  }, [campaignBasicForm, campaignChannelForm])
+  }, [campaignEditingSection, campaignBasicForm, campaignChannelForm])
 
   const handleCampaignPersistSaveAndPublish = useCallback(() => {
-    const basic = { ...campaignBasicForm }
-    const channel = { ...campaignChannelForm }
-    setCampaignBasicSaved(basic)
-    setCampaignBasicPublished(basic)
-    setCampaignChannelSaved(channel)
-    setCampaignChannelPublished(channel)
-    const nextBaseline: CampaignEditBaseline = { basic, channel }
-    setCampaignEditBaseline(nextBaseline)
+    if (!campaignEditingSection) return
+    if (campaignEditingSection === 'basic-settings') {
+      const basic = { ...campaignBasicForm }
+      setCampaignBasicSaved(basic)
+      setCampaignBasicPublished(basic)
+      setCampaignBasicEditBaseline(basic)
+      setCampaignSnackbarMessage('Basic settings saved and published')
+    } else {
+      const channel = { ...campaignChannelForm }
+      setCampaignChannelSaved(channel)
+      setCampaignChannelPublished(channel)
+      setCampaignChannelEditBaseline(channel)
+      setCampaignSnackbarMessage('Channel configuration saved and published')
+    }
     setSaveFooterMenuOpen(false)
-    setCampaignEditing(false)
-    setCampaignSnackbarMessage('Campaign saved and published')
+    setCampaignEditingSection(null)
     setCampaignSnackbarOpen(true)
-  }, [campaignBasicForm, campaignChannelForm])
+  }, [campaignEditingSection, campaignBasicForm, campaignChannelForm])
 
   const handleCampaignPublishClick = useCallback(() => {
     if (!isCampaign) return
@@ -1210,7 +1275,7 @@ export function UserManagementPage({
     }
   }, [mdUp])
 
-  const hasCampaignEditFooter = isCampaign && campaignEditing
+  const hasCampaignEditFooter = isCampaign && campaignEditingSection != null
 
   return (
     <Box
@@ -1263,17 +1328,6 @@ export function UserManagementPage({
             </Box>
             {isCampaign ? (
               <Stack direction="row" alignItems="center" spacing={1} flexShrink={0}>
-                {!campaignEditing ? (
-                  <Button
-                    variant="outlined"
-                    color="neutral"
-                    size="medium"
-                    startIcon={<Icon name="pencil-simple-line" size="sm" />}
-                    onClick={handleCampaignEdit}
-                  >
-                    Edit
-                  </Button>
-                ) : null}
                 <Button
                   variant="contained"
                   color="primary"
@@ -1401,7 +1455,9 @@ export function UserManagementPage({
                   title={item.title}
                   caption={item.caption}
                   selected={section === item.key}
-                  onClick={() => setSection(item.key)}
+                  onClick={() =>
+                    isCampaign ? requestCampaignSection(item.key as CampaignNavKey) : setSection(item.key)
+                  }
                 />
               ))}
             </Stack>
@@ -1428,18 +1484,24 @@ export function UserManagementPage({
           >
             {showCampaignBasicSettings ? (
               <CampaignBasicSettingsPanel
-                viewOnly={!campaignEditing}
+                viewOnly={campaignEditingSection !== 'basic-settings'}
                 form={campaignBasicForm}
                 onPatch={patchCampaignBasicForm}
-                onNavigateSection={setSection}
+                onNavigateSection={
+                  isCampaign
+                    ? (key) => requestCampaignSection(key as CampaignNavKey)
+                    : setSection
+                }
+                onSectionEdit={isCampaign ? handleCampaignBeginBasicEdit : undefined}
               />
             ) : showCampaignChannelConfig ? (
               <CampaignChannelConfigurationPanel
-                viewOnly={!campaignEditing}
+                viewOnly={campaignEditingSection !== 'channel-config'}
                 form={campaignChannelForm}
                 onPatch={patchCampaignChannelForm}
                 channelTab={campaignChannelUiTab}
                 onChannelTabChange={setCampaignChannelUiTab}
+                onSectionEdit={isCampaign ? handleCampaignBeginChannelEdit : undefined}
               />
             ) : !showRbacRolesGrid ? (
               <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
@@ -1473,15 +1535,15 @@ export function UserManagementPage({
                 }}
               >
                 {/* Roles / Privilege Sets — sticky tab bar above grid */}
-                <Box
-                  sx={{
-                    flexShrink: 0,
-                    borderBottom: 1,
-                    borderColor: 'divider',
-                    px: 2,
-                    bgcolor: 'background.paper',
-                  }}
-                >
+                  <Box
+                    sx={{
+                      flexShrink: 0,
+                      borderBottom: 1,
+                      borderColor: 'divider',
+                      px: 2,
+                      bgcolor: 'background.paper',
+                    }}
+                  >
                   <Tabs
                     value={mainTab}
                     onChange={(_: SyntheticEvent, v: string | number) =>
@@ -1503,7 +1565,7 @@ export function UserManagementPage({
                     <Tab value="roles" label="Roles" />
                     <Tab value="privileges" label="Privilege Sets" />
                   </Tabs>
-                </Box>
+                  </Box>
 
                 {mainTab === 'privileges' ? (
                   <Box
@@ -1526,77 +1588,86 @@ export function UserManagementPage({
                         minWidth: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        '& > div': {
-                          width: '100%',
-                          minWidth: 0,
-                          flex: 1,
-                          minHeight: 0,
-                          display: 'flex',
-                          flexDirection: 'column',
-                        },
                       }}
                     >
-                      <DataGrid<PrivilegeSetRow>
-                        listView={false}
-                        sortingMode="client"
-                        checkboxSelection
-                        disableRowSelectionOnClick
-                        onRowClick={handlePrivilegeRowClick}
-                        rows={filteredPrivilegeRows}
-                        columns={privilegeColumns}
-                        pagination
-                        paginationModel={privPaginationModel}
-                        onPaginationModelChange={setPrivPaginationModel}
-                        pageSizeOptions={[10, 25]}
-                        density="standard"
-                        customToolbarFilters={privToolbarFilters}
-                        onToolbarFiltersChange={handlePrivToolbarFiltersChange}
-                        showAppliedFilters
-                        maxVisibleAppliedFilters={4}
-                        initialState={{
-                          pinnedColumns: { right: ['actions'] },
-                          sorting: {
-                            sortModel: [{ field: 'privilegeSetName', sort: 'asc' }],
-                          },
+                      <RbacDataGridPageHeader
+                        title="Privilege Sets"
+                        subtitle={
+                          'Privilege sets determine user permissions and access within the application.'
+                        }
+                        primaryAction={{
+                          id: 'new-privilege-set',
+                          variant: 'contained',
+                          children: 'New Privilege Set',
+                          startIconProps: { name: 'plus', size: 'sm' },
+                          onClick: () => setNewPsOpen(true),
                         }}
-                        onRefresh={() => setPrivPaginationModel((p) => ({ ...p, page: 0 }))}
-                        sx={{
-                          ...dataGridSx,
-                          minWidth: { xs: 200, sm: 280 },
-                          width: '100%',
-                          maxWidth: '100%',
-                          flex: 1,
-                          minHeight: 0,
-                          '& .MuiDataGrid-root': {
-                            bgcolor: 'background.paper',
-                            width: '100%',
-                          },
-                          '& .MuiDataGrid-main': {
-                            bgcolor: 'background.paper',
-                          },
-                        }}
-                        tableHeader={{
-                          title: 'Privilege Sets',
-                          subtitle:
-                            'Privilege sets determine user permissions and access within the application.',
-                          showSearch: true,
-                          searchType: 'basic',
-                          onBasicSearch: (s: string) => {
-                            setPrivSearch(s)
-                            setPrivPaginationModel((p) => ({ ...p, page: 0 }))
-                          },
-                          actions: [
-                            {
-                              id: 'new-privilege-set',
-                              variant: 'contained',
-                              children: 'New Privilege Set',
-                              startIconProps: { name: 'plus', size: 'sm' },
-                              onClick: () => setNewPsOpen(true),
-                            },
-                          ],
-                          maxVisibleActions: 2,
+                        onChatWithAi={openChat}
+                        showSearch
+                        onBasicSearch={(s: string) => {
+                          setPrivSearch(s)
+                          setPrivPaginationModel((p) => ({ ...p, page: 0 }))
                         }}
                       />
+                      <Box
+                        sx={{
+                          flex: 1,
+                          minHeight: 0,
+                          width: '100%',
+                          minWidth: 0,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          '& > div': {
+                            width: '100%',
+                            minWidth: 0,
+                            flex: 1,
+                            minHeight: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                          },
+                        }}
+                      >
+                        <DataGrid<PrivilegeSetRow>
+                          listView={false}
+                          sortingMode="client"
+                          checkboxSelection
+                          disableRowSelectionOnClick
+                          onRowClick={handlePrivilegeRowClick}
+                          rows={filteredPrivilegeRows}
+                          columns={privilegeColumns}
+                          pagination
+                          paginationModel={privPaginationModel}
+                          onPaginationModelChange={setPrivPaginationModel}
+                          pageSizeOptions={[10, 25]}
+                          density="standard"
+                          customToolbarFilters={privToolbarFilters}
+                          onToolbarFiltersChange={handlePrivToolbarFiltersChange}
+                          showAppliedFilters
+                          maxVisibleAppliedFilters={4}
+                          initialState={{
+                            pinnedColumns: { right: ['actions'] },
+                            sorting: {
+                              sortModel: [{ field: 'privilegeSetName', sort: 'asc' }],
+                            },
+                          }}
+                          onRefresh={() => setPrivPaginationModel((p) => ({ ...p, page: 0 }))}
+                          sx={{
+                            ...dataGridSx,
+                            minWidth: { xs: 200, sm: 280 },
+                            width: '100%',
+                            maxWidth: '100%',
+                            flex: 1,
+                            minHeight: 0,
+                            '& .MuiDataGrid-root': {
+                              bgcolor: 'background.paper',
+                              width: '100%',
+                            },
+                            '& .MuiDataGrid-main': {
+                              bgcolor: 'background.paper',
+                            },
+                          }}
+                        />
+                      </Box>
                     </Box>
                   </Box>
                 ) : (
@@ -1620,82 +1691,90 @@ export function UserManagementPage({
                         minWidth: 0,
                         display: 'flex',
                         flexDirection: 'column',
-                        /**
-                         * Signal DataGrid.tsx wraps GridPro in a Box(height:100%). That inner Box must
-                         * stretch horizontally or MUI X resize reports width 0 and the viewport stays blank.
-                         */
-                        '& > div': {
-                          width: '100%',
-                          minWidth: 0,
-                          flex: 1,
-                          minHeight: 0,
-                          display: 'flex',
-                          flexDirection: 'column',
-                        },
                       }}
                     >
-                      {/* Default listView uses viewport < sm; rail + padding often keeps main column < 600px */}
-                      <DataGrid<UserManagementRoleRow>
-                        listView={false}
-                        sortingMode="client"
-                        checkboxSelection
-                        disableRowSelectionOnClick
-                        onRowClick={handleRoleRowClick}
-                        rows={filteredRows}
-                        columns={columns}
-                        pagination
-                        paginationModel={paginationModel}
-                        onPaginationModelChange={setPaginationModel}
-                        pageSizeOptions={[10, 25]}
-                        density="standard"
-                        customToolbarFilters={toolbarFilters}
-                        onToolbarFiltersChange={handleToolbarFiltersChange}
-                        showAppliedFilters
-                        maxVisibleAppliedFilters={4}
-                        initialState={{
-                          pinnedColumns: { right: ['actions'] },
-                          sorting: {
-                            sortModel: [{ field: 'roleName', sort: 'asc' }],
-                          },
+                      <RbacDataGridPageHeader
+                        title="Roles"
+                        subtitle="Roles define what users can see and do."
+                        primaryAction={{
+                          id: 'new-role',
+                          variant: 'contained',
+                          children: 'New Role',
+                          startIconProps: { name: 'plus', size: 'sm' },
+                          onClick: () => setNewRoleOpen(true),
                         }}
-                        onRefresh={() => setPaginationModel((p) => ({ ...p, page: 0 }))}
-                        sx={{
-                          ...dataGridSx,
-                          /** Defensive: virtualizer can shrink to ~0 wide if flex basis collapses; MUI warns + table is invisible */
-                          minWidth: { xs: 200, sm: 280 },
-                          width: '100%',
-                          maxWidth: '100%',
-                          flex: 1,
-                          minHeight: 0,
-                          '& .MuiDataGrid-root': {
-                            bgcolor: 'background.paper',
-                            width: '100%',
-                          },
-                          '& .MuiDataGrid-main': {
-                            bgcolor: 'background.paper',
-                          },
-                        }}
-                        tableHeader={{
-                          title: 'Roles',
-                          subtitle: 'Roles define what users can see and do.',
-                          showSearch: true,
-                          searchType: 'basic',
-                          onBasicSearch: (s: string) => {
-                            setSearch(s)
-                            setPaginationModel((p) => ({ ...p, page: 0 }))
-                          },
-                          actions: [
-                            {
-                              id: 'new-role',
-                              variant: 'contained',
-                              children: 'New Role',
-                              startIconProps: { name: 'plus', size: 'sm' },
-                              onClick: () => setNewRoleOpen(true),
-                            },
-                          ],
-                          maxVisibleActions: 2,
+                        onChatWithAi={openChat}
+                        showSearch
+                        onBasicSearch={(s: string) => {
+                          setSearch(s)
+                          setPaginationModel((p) => ({ ...p, page: 0 }))
                         }}
                       />
+                      <Box
+                        sx={{
+                          flex: 1,
+                          minHeight: 0,
+                          width: '100%',
+                          minWidth: 0,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          /**
+                           * Signal DataGrid.tsx wraps GridPro in a Box(height:100%). That inner Box must
+                           * stretch horizontally or MUI X resize reports width 0 and the viewport stays blank.
+                           */
+                          '& > div': {
+                            width: '100%',
+                            minWidth: 0,
+                            flex: 1,
+                            minHeight: 0,
+                            display: 'flex',
+                            flexDirection: 'column',
+                          },
+                        }}
+                      >
+                        {/* Default listView uses viewport < sm; rail + padding often keeps main column < 600px */}
+                        <DataGrid<UserManagementRoleRow>
+                          listView={false}
+                          sortingMode="client"
+                          checkboxSelection
+                          disableRowSelectionOnClick
+                          onRowClick={handleRoleRowClick}
+                          rows={filteredRows}
+                          columns={columns}
+                          pagination
+                          paginationModel={paginationModel}
+                          onPaginationModelChange={setPaginationModel}
+                          pageSizeOptions={[10, 25]}
+                          density="standard"
+                          customToolbarFilters={toolbarFilters}
+                          onToolbarFiltersChange={handleToolbarFiltersChange}
+                          showAppliedFilters
+                          maxVisibleAppliedFilters={4}
+                          initialState={{
+                            pinnedColumns: { right: ['actions'] },
+                            sorting: {
+                              sortModel: [{ field: 'roleName', sort: 'asc' }],
+                            },
+                          }}
+                          onRefresh={() => setPaginationModel((p) => ({ ...p, page: 0 }))}
+                          sx={{
+                            ...dataGridSx,
+                            /** Defensive: virtualizer can shrink to ~0 wide if flex basis collapses; MUI warns + table is invisible */
+                            minWidth: { xs: 200, sm: 280 },
+                            width: '100%',
+                            maxWidth: '100%',
+                            flex: 1,
+                            minHeight: 0,
+                            '& .MuiDataGrid-root': {
+                              bgcolor: 'background.paper',
+                              width: '100%',
+                            },
+                            '& .MuiDataGrid-main': {
+                              bgcolor: 'background.paper',
+                            },
+                          }}
+                        />
+                      </Box>
                     </Box>
                   </Box>
                 )}
@@ -1996,7 +2075,16 @@ export function UserManagementPage({
       </Slide>
 
       {isCampaign ? (
-        <Snackbar
+        <>
+          <DiscardChangesDialog
+            open={campaignNavDiscardOpen}
+            onKeepEditing={() => {
+              setCampaignNavDiscardOpen(false)
+              setPendingCampaignNavKey(null)
+            }}
+            onDiscard={handleCampaignNavDiscardConfirm}
+          />
+          <Snackbar
           open={campaignSnackbarOpen}
           autoHideDuration={5000}
           onClose={(_e, reason) => {
@@ -2006,6 +2094,7 @@ export function UserManagementPage({
           message={campaignSnackbarMessage}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         />
+        </>
       ) : null}
     </Box>
   )

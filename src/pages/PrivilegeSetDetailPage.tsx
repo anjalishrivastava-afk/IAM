@@ -23,6 +23,8 @@ import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { DetailPageLoadingSkeleton } from '../components/rbac/DetailPageLoadingSkeleton'
+import { useAiChatAssistLayout } from '../context/AiChatAssistLayoutContext'
+import { ChatWithAiButton } from '../components/rbac/ChatWithAiButton'
 import {
   ChipExpandSection,
   SECTION_ROW_LAYOUT,
@@ -731,6 +733,7 @@ function PrivilegesCategorySection({
 export function PrivilegeSetDetailPage() {
   const navigate = useNavigate()
   const { privilegeSetId } = useParams<{ privilegeSetId: string }>()
+  const { openChat } = useAiChatAssistLayout()
 
   const [detail, setDetail] = useState<PrivilegeSetDetailModel | null>(null)
   const [loading, setLoading] = useState(true)
@@ -1175,8 +1178,15 @@ export function PrivilegeSetDetailPage() {
                   Search for category, parameter, or individual permissions below.
                 </Typography>
               </Box>
-              <Box sx={{ width: '100%', maxWidth: { md: 408 } }}>
-                <EnhancedTextField
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ width: '100%', maxWidth: { md: 520 }, flexShrink: 0 }}
+              >
+                <ChatWithAiButton onClick={openChat} />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <EnhancedTextField
                     showLabel={false}
                     placeholder="Search for category, parameter or permissions"
                     value={privSearch}
@@ -1194,7 +1204,8 @@ export function PrivilegeSetDetailPage() {
                       },
                     }}
                   />
-              </Box>
+                </Box>
+              </Stack>
             </Stack>
 
             <Stack
