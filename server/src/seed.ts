@@ -36,14 +36,14 @@ interface PsSeed {
   usedByRoleNames: string[]
 }
 
-interface PermSeed {
+export interface PermSeed {
   id: string
   label: string
   granted: boolean
   isKey?: boolean
 }
 
-interface SgSeed {
+export interface SgSeed {
   id: string
   title: string
   description: string
@@ -52,7 +52,7 @@ interface SgSeed {
   permissions: PermSeed[]
 }
 
-interface CatSeed {
+export interface CatSeed {
   id: string
   title: string
   description: string
@@ -83,7 +83,7 @@ function countableGrantedTotal(categories: CatSeed[]): number {
   return n
 }
 
-function recountPrivilegeTreeTotals(categories: CatSeed[]): void {
+export function recountPrivilegeTreeTotals(categories: CatSeed[]): void {
   for (const cat of categories) {
     let catG = 0
     let catT = 0
@@ -271,6 +271,11 @@ function masterCategoriesFromDisk(): CatSeed[] {
     cachedMonitorCategories = cloneCategories(ps4Detail.categories)
   }
   return cloneCategories(cachedMonitorCategories)
+}
+
+/** Canonical Monitor privilege tree shape (cloned). Used by Copilot to resolve category/subgroup paths before ids are prefixed per privilege set. */
+export function getMonitorCatalogTemplate(): CatSeed[] {
+  return masterCategoriesFromDisk()
 }
 
 /**

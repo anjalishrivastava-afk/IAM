@@ -133,3 +133,33 @@ export async function patchPrivilegeSetRoles(
     body: JSON.stringify({ roleIds }),
   })
 }
+
+export async function deleteRole(roleId: string): Promise<void> {
+  const r = await fetch(`${API}/api/roles/${encodeURIComponent(roleId)}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!r.ok) throw new Error(await parseError(r))
+}
+
+export async function duplicateRole(roleId: string): Promise<UserManagementRoleRow> {
+  return jres(`/api/roles/${encodeURIComponent(roleId)}/duplicate`, {
+    method: 'POST',
+    body: '{}',
+  })
+}
+
+export async function deletePrivilegeSet(privilegeSetId: string): Promise<void> {
+  const r = await fetch(`${API}/api/privilege-sets/${encodeURIComponent(privilegeSetId)}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  if (!r.ok) throw new Error(await parseError(r))
+}
+
+export async function duplicatePrivilegeSet(privilegeSetId: string): Promise<PrivilegeSetRow> {
+  return jres(`/api/privilege-sets/${encodeURIComponent(privilegeSetId)}/duplicate`, {
+    method: 'POST',
+    body: '{}',
+  })
+}

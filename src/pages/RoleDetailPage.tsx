@@ -8,7 +8,7 @@ import {
   type ChangeEvent,
   type MouseEvent as ReactMouseEvent,
 } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import MenuItem from '@mui/material/MenuItem'
 import Slide from '@mui/material/Slide'
 import type { SlideProps } from '@mui/material/Slide'
@@ -47,8 +47,10 @@ import {
   SEARCH_ROW_TEXTFIELD_SX,
 } from '../components/roleDetail/ChipExpandSection'
 import {
-  fetchRoleDetail,
+  deleteRole,
+  duplicateRole,
   fetchPrivilegeSets,
+  fetchRoleDetail,
   patchRole,
   patchRolePrivilegeSetIds,
   patchRoleUsers,
@@ -333,6 +335,7 @@ export function RoleDetailPage({
   const { roleId: roleIdParam } = useParams<{ roleId: string }>()
   const roleId = roleIdOverride ?? roleIdParam
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const [loading, setLoading] = useState(true)
   const [pageError, setPageError] = useState<string | null>(null)
@@ -399,7 +402,8 @@ export function RoleDetailPage({
   }, [])
 
   useEffect(() => {
-    setEditMode(false)
+    const wantEdit = searchParams.get('mode') === 'edit'
+    setEditMode(wantEdit)
     setUsersExpanded(false)
     setPrivExpanded(false)
     setUsersSearch('')
@@ -407,7 +411,7 @@ export function RoleDetailPage({
     setManageUsersDrawer(false)
     setManagePrivilegeDrawer(false)
     setSaveError(null)
-  }, [roleId])
+  }, [roleId, searchParams])
 
   const handleBack = () => navigate(backToPath ?? '/closed-interaction/user-management')
 
@@ -419,6 +423,7 @@ export function RoleDetailPage({
 
   const handleCancelEdit = () => {
     setEditMode(false)
+    setSearchParams({}, { replace: true })
     exitEditRevertDrafts()
   }
 
@@ -439,6 +444,7 @@ export function RoleDetailPage({
           : null,
       )
       setEditMode(false)
+      setSearchParams({}, { replace: true })
       setRoleSavedSnackbarOpen(true)
       setSaveError(null)
     } catch (e) {
@@ -446,13 +452,45 @@ export function RoleDetailPage({
     }
   }
 
-  const handleDuplicate = () => {
-    console.log('duplicate role', roleId)
-    setMenuAnchorEl(null)
+  const handleDuplicate = async () => {
+    if (!roleId) return
+    closeMenu()
+    try {
+      const created = await duplicateRole(roleId)
+      navigate(`/closed-interaction/user-management/roles/${created.id}`)
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Duplicate failed')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!roleId || !window.confirm(`Delete role "${row?.roleName ?? ''}" permanently?`)) return
+    closeMenu()
+    try {
+      await deleteRole(roleId)
+      navigate(backToPath ?? '/closed-interaction/user-management')
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Delete failed')
+    }
   }
 
   const openMenu = (e: ReactMouseEvent<HTMLElement>) => setMenuAnchorEl(e.currentTarget)
   const closeMenu = () => setMenuAnchorEl(null)
+
+  const handleHeroMenuViewDetails = () => {
+    closeMenu()
+    if (editMode) {
+      handleCancelEdit()
+    } else {
+      setSearchParams({}, { replace: true })
+    }
+  }
+
+  const handleHeroMenuEdit = () => {
+    closeMenu()
+    setEditMode(true)
+    setSearchParams({ mode: 'edit' }, { replace: true })
+  }
 
   const effectiveAssignedUsers = detail?.assignedUsers ?? []
   const filteredUsers = useMemo(() => {
@@ -568,7 +606,10 @@ export function RoleDetailPage({
                 color="neutral"
                 size="medium"
                 startIcon={<Icon name="pencil-simple-line" size="sm" />}
-                onClick={() => setEditMode(true)}
+                onClick={() => {
+                  setEditMode(true)
+                  setSearchParams({ mode: 'edit' }, { replace: true })
+                }}
               >
                 Edit
               </Button>
@@ -581,12 +622,41 @@ export function RoleDetailPage({
             >
               <Icon name="dots-three-vertical" size="sm" />
             </IconButton>
-            <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={closeMenu}>
-              <MenuItem onClick={handleDuplicate}>
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={closeMenu}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              slotProps={{ paper: { sx: { minWidth: 200 } } }}
+            >
+              <MenuItem onClick={handleHeroMenuViewDetails}>
+                <ListItemIcon>
+                  <Icon name="list-bullets" size="sm" />
+                </ListItemIcon>
+                <ListItemText primary="View details" />
+              </MenuItem>
+              <MenuItem onClick={handleHeroMenuEdit}>
+                <ListItemIcon>
+                  <Icon name="pencil-simple-line" size="sm" />
+                </ListItemIcon>
+                <ListItemText primary="Edit" />
+              </MenuItem>
+              <MenuItem onClick={() => void handleDuplicate()}>
                 <ListItemIcon>
                   <Icon name="copy-simple" size="sm" />
                 </ListItemIcon>
                 <ListItemText primary="Duplicate" />
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={() => void handleDelete()} sx={{ color: 'error.main' }}>
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <Icon name="trash-simple" size="sm" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Delete"
+                  slotProps={{ primary: { sx: { color: 'error.main' } } }}
+                />
               </MenuItem>
             </Menu>
           </Stack>

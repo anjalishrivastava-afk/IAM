@@ -3,7 +3,8 @@ import { z } from 'zod'
 import type { FunctionDeclaration } from '@google/generative-ai'
 import { getDb } from '../db.js'
 import { nowIso } from '../format.js'
-import { buildMinimalCategoriesForNewPs, insertPrivilegeTree } from '../seed.js'
+import { buildMinimalCategoriesForNewPs, insertPrivilegeTree, recountPrivilegeTreeTotals, getMonitorCatalogTemplate } from '../seed.js'
+import { applyCopilotPrivilegeGrantsOnTree } from '../privilegeCatalogMatch.js'
 import { listDirectoryUsers } from '../directory.js'
 import {
   scoreFieldsAgainstQuery,
@@ -17,12 +18,14 @@ import {
   searchAssignableUsers,
 } from '../userSearch.js'
 import { removeUsersFromOtherRoles } from '../roleAssignments.js'
+import { duplicateRole } from '../duplicateAndDelete.js'
 
 /** Tool input schemas (Zod) — keep in sync with Gemini function declarations. */
 
 export const schemas = {
   search_users: z.object({ query: z.string() }),
   search_privilege_sets: z.object({ query: z.string() }),
+  list_permission_catalog: z.object({ query: z.string().optional() }),
   list_permissions: z.object({}),
   list_roles: z.object({ query: z.string().optional() }),
   create_role: z.object({
@@ -30,13 +33,30 @@ export const schemas = {
     description: z.string().optional(),
     type: z.enum(['custom', 'default']).optional(),
   }),
+  duplicate_role: z.object({
+    sourceRoleId: z.string(),
+    /** Default false for Copilot: copy privilege sets only; omit user roster unless user asks to duplicate assignments too */
+    copyAssignedUsers: z.boolean().optional(),
+  }),
   assign_users_to_role: z.object({
     roleId: z.string(),
     userIds: z.array(z.string()),
   }),
   create_privilege_set: z.object({
     name: z.string(),
+    description: z.string().optional(),
     permissions: z.array(z.string()).optional(),
+    /** Subgroup path or title, e.g. "Live monitoring" (unique titles) or "Monitor > Live monitoring". Enables every permission row in that subgroup. */
+    grantAllInSubgroups: z.array(z.string()).optional(),
+    /** Enable only listed permission labels under a subgroup (after clearing other grants when any explicit grant_* is supplied). */
+    grantPermissionsInSubgroup: z
+      .array(
+        z.object({
+          subgroupPath: z.string(),
+          permissionLabels: z.array(z.string()).min(1),
+        }),
+      )
+      .optional(),
   }),
   attach_privilege_set_to_role: z.object({
     roleId: z.string(),
@@ -287,7 +307,8 @@ const toolDefsInner: Omit<ToolDefs, never> = {
 
   list_permissions: {
     name: 'list_permissions',
-    description: 'List permission labels available in the catalog (for planning).',
+    description:
+      'Flat list of all permission labels (abridged). For category/subgroup structure (Monitor > Live monitoring, etc.) use list_permission_catalog instead.',
     isDestructive: false,
     schema: schemas.list_permissions,
     geminiDeclaration: declaration('list_permissions', 'List all permission labels.', {}, []),
@@ -300,6 +321,87 @@ const toolDefsInner: Omit<ToolDefs, never> = {
         )
         .all() as { id: string; label: string }[]
       return { permissions: rows, total: rows.length }
+    },
+  },
+
+  list_permission_catalog: {
+    name: 'list_permission_catalog',
+    description:
+      'Hierarchical privilege catalog (Monitor template): categories, subgroups, and permission labels. Use before create_privilege_set to disambiguate paths. Without query: returns outline only; with query: returns matching sections with full label lists.',
+    isDestructive: false,
+    schema: schemas.list_permission_catalog,
+    geminiDeclaration: declaration(
+      'list_permission_catalog',
+      'List Monitor privilege catalog as category > subgroup > permission labels.',
+      {
+        query: {
+          type: 'string',
+          description:
+            'Optional filter (e.g. "live monitoring", "monitor reports"). Omit to get category/subgroup outline only.',
+        },
+      },
+      [],
+    ),
+    async run(raw) {
+      const { query } = schemas.list_permission_catalog.parse(raw)
+      const qTrim = query?.trim() ?? ''
+      const base = getMonitorCatalogTemplate()
+
+      if (!qTrim) {
+        return {
+          outline: true,
+          categories: base.map((c) => ({
+            categoryTitle: c.title,
+            subgroups: c.subgroups.map((sg) => ({
+              subgroupTitle: sg.title,
+              description: sg.description,
+              permissionCount: sg.permissions.length,
+            })),
+          })),
+          hint: 'Subgroup titles are unique. For "all Live monitoring permissions" use create_privilege_set with grantAllInSubgroups: ["Live monitoring"] or ["Monitor > Live monitoring"]. Pass query to expand a section with every permission label.',
+        }
+      }
+
+      const words = qTrim
+        .toLowerCase()
+        .split(/\s+/g)
+        .map((w) => w.replace(/[^a-z0-9]+/g, ''))
+        .filter((w) => w.length > 1)
+
+      const blobFor = (c: (typeof base)[number], sg: (typeof base)[number]['subgroups'][number]) =>
+        `${c.title} ${c.description} ${sg.title} ${sg.description} ${sg.permissions.map((p) => p.label).join(' ')}`.toLowerCase()
+
+      const filtered = base
+        .map((c) => ({
+          cat: c,
+          subgroups: c.subgroups.filter((sg) => {
+            const blob = blobFor(c, sg)
+            if (words.length === 0) return blob.includes(qTrim.toLowerCase())
+            return words.every((w) => blob.includes(w))
+          }),
+        }))
+        .filter((row) => row.subgroups.length > 0)
+
+      if (filtered.length === 0) {
+        return {
+          categories: [],
+          totalSubgroups: 0,
+          hint: 'No section matched this query — widen terms or use outline mode (omit query).',
+        }
+      }
+
+      return {
+        outline: false,
+        categories: filtered.map(({ cat, subgroups }) => ({
+          categoryTitle: cat.title,
+          subgroups: subgroups.map((sg) => ({
+            subgroupTitle: sg.title,
+            subgroupDescription: sg.description,
+            permissionLabels: sg.permissions.map((p) => p.label),
+          })),
+        })),
+        totalSubgroups: filtered.reduce((acc, row) => acc + row.subgroups.length, 0),
+      }
     },
   },
 
@@ -385,6 +487,47 @@ const toolDefsInner: Omit<ToolDefs, never> = {
     },
   },
 
+  duplicate_role: {
+    name: 'duplicate_role',
+    description:
+      'Duplicate an existing role: new name (“Copy of …”), same description and scope, and copies all privilege set links from the source. By default does not copy the user roster — set copyAssignedUsers true only if the user asks to duplicate people too. Use list_roles to obtain sourceRoleId.',
+    isDestructive: false,
+    schema: schemas.duplicate_role,
+    geminiDeclaration: declaration(
+      'duplicate_role',
+      'Duplicate role from an existing role id — copies privilege set attachments; optionally copies roster.',
+      {
+        sourceRoleId: { type: 'string', description: 'Role id to clone from (list_roles / @mention)' },
+        copyAssignedUsers: {
+          type: 'boolean',
+          description:
+            'If true, also copy assigned users onto the new role. Default omit/false unless user asks for that.',
+        },
+      },
+      ['sourceRoleId'],
+    ),
+    async run(raw) {
+      const parsed = schemas.duplicate_role.parse(raw)
+      const copyAssignedUsers = parsed.copyAssignedUsers === true
+      const db = getDb()
+      const row = duplicateRole(db, parsed.sourceRoleId.trim(), {
+        copyAssignedUsers,
+      })
+      if (!row) throw new Error('Role not found')
+      return {
+        roleId: row.id,
+        roleName: row.roleName,
+        description: row.description,
+        privilegeSetsCopiedNote:
+          copyAssignedUsers
+            ? undefined
+            : 'User roster omitted (empty on the new role). Privilege sets from the source are linked.',
+        assignedUserCount: row.assignedUserCount,
+        handoffPath: `/closed-interaction/user-management/roles/${encodeURIComponent(row.id)}`,
+      }
+    },
+  },
+
   assign_users_to_role: {
     name: 'assign_users_to_role',
     description:
@@ -443,32 +586,86 @@ const toolDefsInner: Omit<ToolDefs, never> = {
 
   create_privilege_set: {
     name: 'create_privilege_set',
-    description: 'Create a privilege set from the default template (permissions param is informational for now).',
+    description:
+      'Create a new privilege set with the full Monitor catalog tree. When the user names a subgroup (e.g. "all Live monitoring permissions"), set grantAllInSubgroups to that path. When they name specific actions only, use grantPermissionsInSubgroup. Any explicit grant field clears other grants first; otherwise default keyword-based grants apply from the set name.',
     isDestructive: false,
     schema: schemas.create_privilege_set,
-    geminiDeclaration: declaration('create_privilege_set', 'Create privilege set.', {
+    geminiDeclaration: declaration('create_privilege_set', 'Create privilege set with optional subgroup-scoped grants.', {
       name: { type: 'string' },
-      permissions: { type: 'array', items: { type: 'string' } },
+      description: { type: 'string' },
+      permissions: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Legacy / notes only — prefer grantAllInSubgroups or grantPermissionsInSubgroup',
+      },
+      grantAllInSubgroups: {
+        type: 'array',
+        items: { type: 'string' },
+        description:
+          'Enable every permission in each subgroup, e.g. ["Live monitoring"] or ["Monitor > Live monitoring"]. Use list_permission_catalog if unsure of titles.',
+      },
+      grantPermissionsInSubgroup: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            subgroupPath: {
+              type: 'string',
+              description: 'Subgroup title or "Category > Subgroup", e.g. Monitor > Live monitoring',
+            },
+            permissionLabels: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Exact labels from catalog (e.g. "View", "Snoop")',
+            },
+          },
+          required: ['subgroupPath', 'permissionLabels'],
+        },
+        description:
+          'Grant only these permission labels under the given subgroup. Clears all other grants when combined with explicit grant mode.',
+      },
     }, ['name']),
     async run(raw) {
-      const { name, permissions } = schemas.create_privilege_set.parse(raw)
+      const parsed = schemas.create_privilege_set.parse(raw)
+      const { name, description, permissions, grantAllInSubgroups, grantPermissionsInSubgroup } = parsed
       const id = `ps-${randomUUID().slice(0, 10)}`
       const t = nowIso()
-      const desc = `Created by Copilot`
-      const longDesc =
-        permissions?.length
-          ? `Requested permissions noted (${permissions.slice(0, 8).join(', ')}${permissions.length > 8 ? '…' : ''}) — apply in Privilege Set detail.`
-          : 'Configure access for teams using this privilege set.'
+      const desc = description?.trim() || 'Created by Copilot'
       const db = getDb()
+
+      const categories = buildMinimalCategoriesForNewPs(id, name.trim())
+      const grantApply = applyCopilotPrivilegeGrantsOnTree(categories, {
+        grantAllInSubgroups,
+        grantPermissionsInSubgroup,
+      })
+      if (grantApply.applied) {
+        recountPrivilegeTreeTotals(categories)
+      }
+
+      const longDescParts: string[] = []
+      if (permissions?.length) {
+        longDescParts.push(
+          `Notes: ${permissions.slice(0, 8).join(', ')}${permissions.length > 8 ? '…' : ''}`,
+        )
+      }
+      if (grantApply.notes.length) {
+        longDescParts.push(grantApply.notes.join(' · '))
+      }
+      if (!longDescParts.length) {
+        longDescParts.push('Configure access for teams using this privilege set.')
+      }
+      const longDesc = longDescParts.join(' ')
+
       db.prepare(
         `INSERT INTO privilege_set (id, privilege_set_name, description, long_description, scope_type, assigned_role_count, created_by, created_at, updated_at)
          VALUES (?, ?, ?, ?, 'custom', 0, ?, ?, ?)`,
       ).run(id, name.trim(), desc, longDesc, 'Copilot', t, t)
-      const categories = buildMinimalCategoriesForNewPs(id, name.trim())
       insertPrivilegeTree(db, id, categories)
       return {
         privilegeSetId: id,
         privilegeSetName: name.trim(),
+        explicitGrantsApplied: grantApply.applied,
+        grantSummary: grantApply.notes.length ? grantApply.notes : undefined,
         handoffPath: `/closed-interaction/user-management/privilege-sets/${encodeURIComponent(id)}`,
       }
     },

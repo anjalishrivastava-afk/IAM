@@ -10,9 +10,7 @@ import {
 } from 'react'
 import Tab from '@mui/material/Tab'
 import type { Theme } from '@mui/material/styles'
-import {
-  ArrowUp,
-} from '@phosphor-icons/react'
+import { ArrowUp, Stop } from '@phosphor-icons/react'
 import {
   Box,
   Divider,
@@ -203,12 +201,15 @@ export type CopilotComposerHandle = {
 
 type CopilotComposerProps = {
   disabled?: boolean
+  /** While true, the primary action becomes Stop (calls onStop) instead of Send. */
+  isBusy?: boolean
+  onStop?: () => void
   onPayloadChange?: (len: number) => void
   onSubmit?: () => void
 }
 
 export const CopilotComposer = forwardRef<CopilotComposerHandle, CopilotComposerProps>(
-  function CopilotComposer({ disabled, onPayloadChange, onSubmit }, ref) {
+  function CopilotComposer({ disabled, isBusy, onStop, onPayloadChange, onSubmit }, ref) {
     const rootRef = useRef<HTMLDivElement | null>(null)
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
     const [tab, setTab] = useState(0)
@@ -420,7 +421,7 @@ export const CopilotComposer = forwardRef<CopilotComposerHandle, CopilotComposer
         }
       } else if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
-        onSubmit?.()
+        if (!disabled && !isBusy) onSubmit?.()
       }
     }
 
@@ -429,7 +430,7 @@ export const CopilotComposer = forwardRef<CopilotComposerHandle, CopilotComposer
     }, [tab, debouncedQ, rows.length])
 
     const nearLimit = len > MAX_CHARS - 50
-    const canSend = len > 0 && len <= MAX_CHARS && !disabled
+    const canSend = len > 0 && len <= MAX_CHARS && !disabled && !isBusy
 
     return (
       <Stack spacing={1} sx={{ width: '100%', maxWidth: 700, mx: 'auto' }}>
@@ -488,11 +489,35 @@ export const CopilotComposer = forwardRef<CopilotComposerHandle, CopilotComposer
               sx={{
                 fontSize: 12,
                 color: nearLimit ? 'error.main' : 'text.disabled',
+                visibility: isBusy ? 'hidden' : 'visible',
               }}
             >
               {len}/{MAX_CHARS}
             </Typography>
-            <Box
+            {isBusy && onStop ?
+              <Box
+                component="button"
+                type="button"
+                aria-label="Stop generation"
+                sx={(theme: Theme) => ({
+                  width: 32,
+                  height: 32,
+                  flexShrink: 0,
+                  border: 'none',
+                  borderRadius: '8px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  bgcolor: theme.palette.grey[800],
+                  color: '#fff',
+                  '&:hover': { bgcolor: theme.palette.grey[900] },
+                })}
+                onClick={() => onStop()}
+              >
+                <Stop size={18} weight="fill" aria-hidden />
+              </Box>
+            : <Box
               component="button"
               type="button"
               aria-label="Send message"
@@ -514,7 +539,7 @@ export const CopilotComposer = forwardRef<CopilotComposerHandle, CopilotComposer
               onClick={() => onSubmit?.()}
             >
               <ArrowUp size={18} weight="bold" aria-hidden />
-            </Box>
+            </Box>}
           </Stack>
         </Box>
 

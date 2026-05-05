@@ -113,15 +113,29 @@ function humanizeTool(name: string, input: unknown): string {
     case 'search_privilege_sets':
       return `Searching privilege sets for "${o.query}"`
     case 'list_permissions':
-      return 'Listing available permissions'
+      return 'Listing permission catalog (flat)'
+    case 'list_permission_catalog':
+      return o.query
+        ? `Browsing privilege catalog for "${o.query}"`
+        : 'Browsing privilege catalog (outline)'
     case 'list_roles':
       return o.query ? `Listing roles matching "${o.query}"` : 'Listing roles'
     case 'create_role':
       return `Creating role "${o.name}"`
+    case 'duplicate_role':
+      return 'Duplicating role (copying privilege set links)'
     case 'assign_users_to_role':
       return `Assigning ${Array.isArray(o.userIds) ? o.userIds.length : 0} user(s) to role`
-    case 'create_privilege_set':
-      return `Creating privilege set "${o.name}"`
+    case 'create_privilege_set': {
+      const scopes: string[] = []
+      const allSg = (o.grantAllInSubgroups ?? []) as string[]
+      const scoped = (o.grantPermissionsInSubgroup ?? []) as unknown[]
+      if (Array.isArray(allSg) && allSg.length) scopes.push(`${allSg.length} subgroup(s): all permissions`)
+      if (Array.isArray(scoped) && scoped.length)
+        scopes.push(`${scoped.length} subgroup(s): selected labels only`)
+      const suf = scopes.length ? ` (${scopes.join('; ')})` : ''
+      return `Creating privilege set "${o.name}"${suf}`
+    }
     case 'attach_privilege_set_to_role':
       return 'Attaching privilege set to role'
     case 'detach_privilege_set_from_role':
@@ -149,6 +163,7 @@ const COPILOT_READONLY_TOOLS = new Set([
   'search_users',
   'search_privilege_sets',
   'list_permissions',
+  'list_permission_catalog',
   'list_roles',
 ])
 
@@ -698,7 +713,13 @@ export function RolesPrivilegesCopilotDrawer({ open, onClose }: RolesPrivilegesC
             background: `linear-gradient(180deg, transparent 0%, ${theme.palette.background.paper} 20%)`,
           })}
         >
-          <CopilotComposer ref={composerRef} disabled={streaming || !online} onSubmit={onSendFromComposer} />
+          <CopilotComposer
+            ref={composerRef}
+            disabled={streaming || !online}
+            isBusy={streaming && online}
+            onStop={() => abortRef.current?.abort()}
+            onSubmit={onSendFromComposer}
+          />
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.5, px: 0.5, pt: 0.75, maxWidth: 700, mx: 'auto' }}>
             <Typography sx={{ fontSize: 12, color: '#616161' }}>AI can make mistakes, so double check it</Typography>
             <Button

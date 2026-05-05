@@ -53,6 +53,10 @@ import {
   fetchRoles,
   createPrivilegeSet,
   createRole,
+  deletePrivilegeSet,
+  deleteRole,
+  duplicatePrivilegeSet,
+  duplicateRole,
 } from '../api/rbacApi'
 import { RBAC_LISTS_REFRESH_EVENT } from '../constants/rbacEvents'
 import type { UserManagementRoleRow } from '../data/userManagementRoles'
@@ -1000,11 +1004,46 @@ export function UserManagementPage({
   )
 
   const handleMenuAction = useCallback(
-    (action: string) => {
-      console.log(`Role row ${menuRowId}: ${action}`)
+    async (action: 'view' | 'edit' | 'duplicate' | 'delete') => {
+      const id = menuRowId
       handleMenuClose()
+      if (!id) return
+      if (action === 'view') {
+        navigate(`/closed-interaction/user-management/roles/${id}`)
+        return
+      }
+      if (action === 'edit') {
+        navigate(`/closed-interaction/user-management/roles/${id}?mode=edit`)
+        return
+      }
+      if (action === 'delete') {
+        if (
+          !window.confirm(
+            'Permanently delete this role? User assignments and privilege set links will be removed.',
+          )
+        )
+          return
+        try {
+          setListError(null)
+          await deleteRole(id)
+          await reloadRbacsLists()
+          window.dispatchEvent(new CustomEvent(RBAC_LISTS_REFRESH_EVENT))
+        } catch (e) {
+          setListError(e instanceof Error ? e.message : 'Delete role failed')
+        }
+        return
+      }
+      try {
+        setListError(null)
+        const row = await duplicateRole(id)
+        await reloadRbacsLists()
+        window.dispatchEvent(new CustomEvent(RBAC_LISTS_REFRESH_EVENT))
+        navigate(`/closed-interaction/user-management/roles/${row.id}`)
+      } catch (e) {
+        setListError(e instanceof Error ? e.message : 'Duplicate role failed')
+      }
     },
-    [menuRowId, handleMenuClose],
+    [menuRowId, handleMenuClose, navigate, reloadRbacsLists],
   )
 
   useEffect(() => {
@@ -1027,11 +1066,46 @@ export function UserManagementPage({
   )
 
   const handlePrivMenuAction = useCallback(
-    (action: string) => {
-      console.log(`Privilege set row ${privMenuRowId}: ${action}`)
+    async (action: 'view' | 'edit' | 'duplicate' | 'delete') => {
+      const id = privMenuRowId
       handlePrivMenuClose()
+      if (!id) return
+      if (action === 'view') {
+        navigate(`/closed-interaction/user-management/privilege-sets/${id}`)
+        return
+      }
+      if (action === 'edit') {
+        navigate(`/closed-interaction/user-management/privilege-sets/${id}?mode=edit`)
+        return
+      }
+      if (action === 'delete') {
+        if (
+          !window.confirm(
+            'Permanently delete this privilege set? It will be removed from all roles.',
+          )
+        )
+          return
+        try {
+          setListError(null)
+          await deletePrivilegeSet(id)
+          await reloadRbacsLists()
+          window.dispatchEvent(new CustomEvent(RBAC_LISTS_REFRESH_EVENT))
+        } catch (e) {
+          setListError(e instanceof Error ? e.message : 'Delete privilege set failed')
+        }
+        return
+      }
+      try {
+        setListError(null)
+        const row = await duplicatePrivilegeSet(id)
+        await reloadRbacsLists()
+        window.dispatchEvent(new CustomEvent(RBAC_LISTS_REFRESH_EVENT))
+        navigate(`/closed-interaction/user-management/privilege-sets/${row.id}`)
+      } catch (e) {
+        setListError(e instanceof Error ? e.message : 'Duplicate privilege set failed')
+      }
     },
-    [privMenuRowId, handlePrivMenuClose],
+    [privMenuRowId, handlePrivMenuClose, navigate, reloadRbacsLists],
   )
 
   const showRbacRolesGrid = !isCampaign && section === 'roles'
@@ -1791,20 +1865,26 @@ export function UserManagementPage({
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           slotProps={{ paper: { sx: { minWidth: 200 } } }}
         >
-          <MenuItem onClick={() => handleMenuAction('duplicate')}>
+          <MenuItem onClick={() => void handleMenuAction('view')}>
             <ListItemIcon>
-              <Icon name="copy-simple" size="sm" />
+              <Icon name="list-bullets" size="sm" />
             </ListItemIcon>
-            <ListItemText primary="Duplicate role" />
+            <ListItemText primary="View details" />
           </MenuItem>
-          <MenuItem onClick={() => handleMenuAction('edit-meta')}>
+          <MenuItem onClick={() => void handleMenuAction('edit')}>
             <ListItemIcon>
               <Icon name="pencil-simple-line" size="sm" />
             </ListItemIcon>
-            <ListItemText primary="Edit metadata" />
+            <ListItemText primary="Edit" />
+          </MenuItem>
+          <MenuItem onClick={() => void handleMenuAction('duplicate')}>
+            <ListItemIcon>
+              <Icon name="copy-simple" size="sm" />
+            </ListItemIcon>
+            <ListItemText primary="Duplicate" />
           </MenuItem>
           <Divider />
-          <MenuItem onClick={() => handleMenuAction('delete')} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={() => void handleMenuAction('delete')} sx={{ color: 'error.main' }}>
             <ListItemIcon sx={{ color: 'inherit' }}>
               <Icon name="trash-simple" size="sm" />
             </ListItemIcon>
@@ -1820,20 +1900,26 @@ export function UserManagementPage({
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           slotProps={{ paper: { sx: { minWidth: 200 } } }}
         >
-          <MenuItem onClick={() => handlePrivMenuAction('duplicate')}>
+          <MenuItem onClick={() => void handlePrivMenuAction('view')}>
             <ListItemIcon>
-              <Icon name="copy-simple" size="sm" />
+              <Icon name="list-bullets" size="sm" />
             </ListItemIcon>
-            <ListItemText primary="Duplicate privilege set" />
+            <ListItemText primary="View details" />
           </MenuItem>
-          <MenuItem onClick={() => handlePrivMenuAction('edit-meta')}>
+          <MenuItem onClick={() => void handlePrivMenuAction('edit')}>
             <ListItemIcon>
               <Icon name="pencil-simple-line" size="sm" />
             </ListItemIcon>
-            <ListItemText primary="Edit metadata" />
+            <ListItemText primary="Edit" />
+          </MenuItem>
+          <MenuItem onClick={() => void handlePrivMenuAction('duplicate')}>
+            <ListItemIcon>
+              <Icon name="copy-simple" size="sm" />
+            </ListItemIcon>
+            <ListItemText primary="Duplicate" />
           </MenuItem>
           <Divider />
-          <MenuItem onClick={() => handlePrivMenuAction('delete')} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={() => void handlePrivMenuAction('delete')} sx={{ color: 'error.main' }}>
             <ListItemIcon sx={{ color: 'inherit' }}>
               <Icon name="trash-simple" size="sm" />
             </ListItemIcon>

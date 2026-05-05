@@ -13,6 +13,12 @@ import { buildMinimalCategoriesForNewPs, insertPrivilegeTree, runSeed, seedIfEmp
 import { registerCopilotRoutes } from './copilot/copilotRoutes.js'
 import { searchAssignableUsers } from './userSearch.js'
 import { removeUsersFromOtherRoles } from './roleAssignments.js'
+import {
+  deletePrivilegeSetById,
+  deleteRoleById,
+  duplicatePrivilegeSet,
+  duplicateRole,
+} from './duplicateAndDelete.js'
 
 const PORT = Number(process.env.PORT ?? 3333)
 
@@ -285,6 +291,18 @@ app.patch('/api/roles/:id/privilege-sets', (req, res) => {
   tx()
 
   res.json({ ok: true })
+})
+
+app.delete('/api/roles/:id', (req, res) => {
+  const ok = deleteRoleById(getDb(), req.params.id)
+  if (!ok) return res.status(404).json({ error: 'Role not found' })
+  res.status(204).end()
+})
+
+app.post('/api/roles/:id/duplicate', (req, res) => {
+  const row = duplicateRole(getDb(), req.params.id)
+  if (!row) return res.status(404).json({ error: 'Role not found' })
+  res.status(201).json(row)
 })
 
 /** —— Privilege Sets —— */
@@ -607,6 +625,18 @@ app.patch('/api/privilege-sets/:id/grants', (req, res) => {
   tx()
 
   res.json({ ok: true })
+})
+
+app.delete('/api/privilege-sets/:id', (req, res) => {
+  const ok = deletePrivilegeSetById(getDb(), req.params.id)
+  if (!ok) return res.status(404).json({ error: 'Privilege set not found' })
+  res.status(204).end()
+})
+
+app.post('/api/privilege-sets/:id/duplicate', (req, res) => {
+  const row = duplicatePrivilegeSet(getDb(), req.params.id)
+  if (!row) return res.status(404).json({ error: 'Privilege set not found' })
+  res.status(201).json(row)
 })
 
 function recalcTallies(db: ReturnType<typeof getDb>, privilegeSetId: string): void {

@@ -21,7 +21,7 @@ import Alert from '@mui/material/Alert'
 import Accordion from '@mui/material/Accordion'
 import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DetailPageLoadingSkeleton } from '../components/rbac/DetailPageLoadingSkeleton'
 import { useAiChatAssistLayout } from '../context/AiChatAssistLayoutContext'
 import { ChatWithAiButton } from '../components/rbac/ChatWithAiButton'
@@ -66,6 +66,8 @@ import { buildGrantMapFromDetail } from '../data/privilegeSetDetailData'
 import { ROLE_DETAIL_COLLAPSED_CHIP_CAP } from '../data/roleDetailData'
 import type { UserManagementRoleRow } from '../data/userManagementRoles'
 import {
+  deletePrivilegeSet,
+  duplicatePrivilegeSet,
   fetchRoles,
   fetchPrivilegeSetDetail,
   patchPrivilegeSet,
@@ -732,6 +734,7 @@ function PrivilegesCategorySection({
 
 export function PrivilegeSetDetailPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { privilegeSetId } = useParams<{ privilegeSetId: string }>()
   const { openChat } = useAiChatAssistLayout()
 
@@ -815,12 +818,12 @@ export function PrivilegeSetDetailPage() {
     setGrantByPermissionId(m)
     setExpandedCategoryId(detail.categories[0]?.id ?? null)
     setPrivSearch('')
-    setEditMode(false)
+    setEditMode(searchParams.get('mode') === 'edit')
     setFocusedCategoryId(null)
     setManageAssignRolesDrawerOpen(false)
     setAssignRolesSearch('')
     setAssignRolesExpanded(false)
-  }, [detail, privilegeSetId])
+  }, [detail, privilegeSetId, searchParams])
 
   useEffect(() => {
     if (privSearch.trim()) return
@@ -914,6 +917,7 @@ export function PrivilegeSetDetailPage() {
     setGrantByPermissionId({ ...committedGrantByPermissionId })
     setSaveError(null)
     setEditMode(false)
+    setSearchParams({}, { replace: true })
   }
 
   const handleSaveEdit = async () => {
@@ -948,10 +952,56 @@ export function PrivilegeSetDetailPage() {
       const fresh = await fetchPrivilegeSetDetail(privilegeSetId)
       setDetail(fresh)
       setEditMode(false)
+      setSearchParams({}, { replace: true })
       setPrivilegeSetSavedSnackbarOpen(true)
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Save failed')
     }
+  }
+
+  const handleDuplicatePrivilegeSet = async () => {
+    if (!privilegeSetId) return
+    closeMenu()
+    try {
+      const row = await duplicatePrivilegeSet(privilegeSetId)
+      navigate(`/closed-interaction/user-management/privilege-sets/${row.id}`)
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Duplicate failed')
+    }
+  }
+
+  const handleDeletePrivilegeSet = async () => {
+    const name = detail?.base.privilegeSetName ?? ''
+    if (
+      !privilegeSetId ||
+      !window.confirm(`Permanently delete privilege set "${name}"? It will be removed from every role.`)
+    )
+      return
+    closeMenu()
+    try {
+      await deletePrivilegeSet(privilegeSetId)
+      navigate('/closed-interaction/user-management', { state: { umMainTab: 'privileges' } })
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Delete failed')
+    }
+  }
+
+  const handleHeroMenuViewDetails = () => {
+    closeMenu()
+    if (editMode) {
+      setDraftPrivilegeSetName(committedPrivilegeSetName)
+      setDraftLongDescription(committedLongDescription)
+      setGrantByPermissionId({ ...committedGrantByPermissionId })
+      setSaveError(null)
+      setEditMode(false)
+    }
+    setSearchParams({}, { replace: true })
+  }
+
+  const handleHeroMenuEdit = () => {
+    closeMenu()
+    setEditMode(true)
+    setSearchParams({ mode: 'edit' }, { replace: true })
   }
 
   const handleSavePrivilegeSetRoles = useCallback(
@@ -1069,7 +1119,10 @@ export function PrivilegeSetDetailPage() {
                 color="neutral"
                 size="medium"
                 startIcon={<Icon name="pencil-simple-line" size="sm" />}
-                onClick={() => setEditMode(true)}
+                onClick={() => {
+                  setEditMode(true)
+                  setSearchParams({ mode: 'edit' }, { replace: true })
+                }}
               >
                 Edit
               </Button>
@@ -1082,12 +1135,41 @@ export function PrivilegeSetDetailPage() {
             >
               <Icon name="dots-three-vertical" size="sm" />
             </IconButton>
-            <Menu anchorEl={menuAnchorEl} open={Boolean(menuAnchorEl)} onClose={closeMenu}>
-              <MenuItem onClick={closeMenu}>
+            <Menu
+              anchorEl={menuAnchorEl}
+              open={Boolean(menuAnchorEl)}
+              onClose={closeMenu}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              slotProps={{ paper: { sx: { minWidth: 200 } } }}
+            >
+              <MenuItem onClick={handleHeroMenuViewDetails}>
+                <ListItemIcon>
+                  <Icon name="list-bullets" size="sm" />
+                </ListItemIcon>
+                <ListItemText primary="View details" />
+              </MenuItem>
+              <MenuItem onClick={handleHeroMenuEdit}>
+                <ListItemIcon>
+                  <Icon name="pencil-simple-line" size="sm" />
+                </ListItemIcon>
+                <ListItemText primary="Edit" />
+              </MenuItem>
+              <MenuItem onClick={() => void handleDuplicatePrivilegeSet()}>
                 <ListItemIcon>
                   <Icon name="copy-simple" size="sm" />
                 </ListItemIcon>
                 <ListItemText primary="Duplicate" />
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={() => void handleDeletePrivilegeSet()} sx={{ color: 'error.main' }}>
+                <ListItemIcon sx={{ color: 'inherit' }}>
+                  <Icon name="trash-simple" size="sm" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Delete"
+                  slotProps={{ primary: { sx: { color: 'error.main' } } }}
+                />
               </MenuItem>
             </Menu>
           </Stack>
