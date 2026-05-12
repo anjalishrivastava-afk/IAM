@@ -51,6 +51,7 @@ import {
 import {
   fetchPrivilegeSets,
   fetchRoles,
+  fetchDirectoryUsers,
   createPrivilegeSet,
   createRole,
   deletePrivilegeSet,
@@ -59,11 +60,13 @@ import {
   duplicateRole,
 } from '../api/rbacApi'
 import { RBAC_LISTS_REFRESH_EVENT } from '../constants/rbacEvents'
+import type { UserManagementDirectoryRow } from '../data/userManagementUsers'
 import type { UserManagementRoleRow } from '../data/userManagementRoles'
 import type { PrivilegeSetRow } from '../data/privilegeSets'
 import type { FilterRecords } from '../types/filterRecords'
 import { useAiChatAssistLayout } from '../context/AiChatAssistLayoutContext'
 import { RbacDataGridPageHeader } from '../components/rbac/RbacDataGridPageHeader'
+import { UserManagementUsersPanel } from '../components/rbac/UserManagementUsersPanel'
 import { SIGNAL_NAV_WIDTH_EXPANDED_PX } from './rbacUiImpact/constants'
 import { DirtyPulseLabel, DiscardChangesDialog } from './rbacUiImpact/shared'
 import {
@@ -477,6 +480,8 @@ export function UserManagementPage({
   const [roleRows, setRoleRows] = useState<UserManagementRoleRow[]>([])
   const [privilegeRows, setPrivilegeRows] = useState<PrivilegeSetRow[]>([])
   const [listError, setListError] = useState<string | null>(null)
+  const [userRows, setUserRows] = useState<UserManagementDirectoryRow[]>([])
+  const [userLoadError, setUserLoadError] = useState<string | null>(null)
 
   const { openChat, closeChat } = useAiChatAssistLayout()
 
@@ -549,6 +554,16 @@ export function UserManagementPage({
     }
   }, [])
 
+  const reloadUsers = useCallback(async () => {
+    try {
+      setUserLoadError(null)
+      const u = await fetchDirectoryUsers()
+      setUserRows(u)
+    } catch (e) {
+      setUserLoadError(e instanceof Error ? e.message : 'Failed to load users')
+    }
+  }, [])
+
   useEffect(() => {
     if (variant === 'campaign') {
       void reloadRbacsLists()
@@ -559,10 +574,19 @@ export function UserManagementPage({
   }, [variant, location.pathname, reloadRbacsLists])
 
   useEffect(() => {
-    const h = () => void reloadRbacsLists()
+    const h = () => {
+      void reloadRbacsLists()
+      void reloadUsers()
+    }
     window.addEventListener(RBAC_LISTS_REFRESH_EVENT, h)
     return () => window.removeEventListener(RBAC_LISTS_REFRESH_EVENT, h)
-  }, [reloadRbacsLists])
+  }, [reloadRbacsLists, reloadUsers])
+
+  useEffect(() => {
+    if (variant !== 'rbac') return
+    if (section !== 'users') return
+    void reloadUsers()
+  }, [variant, section, reloadUsers])
 
   useEffect(() => {
     return () => {
@@ -1113,8 +1137,8 @@ export function UserManagementPage({
   const showCampaignChannelConfig = isCampaign && section === 'channel-config'
 
   useEffect(() => {
-    if (!showRbacRolesGrid) closeChat()
-  }, [showRbacRolesGrid, closeChat])
+    if (section !== 'roles') closeChat()
+  }, [section, closeChat])
 
   const campaignFooterDirtyCount = useMemo(() => {
     if (!isCampaign || !campaignEditingSection) return 0
@@ -1577,18 +1601,22 @@ export function UserManagementPage({
                 onChannelTabChange={setCampaignChannelUiTab}
                 onSectionEdit={isCampaign ? handleCampaignBeginChannelEdit : undefined}
               />
+            ) : !isCampaign && section === 'users' ? (
+              <UserManagementUsersPanel
+                rows={userRows}
+                loadError={userLoadError}
+                onRetryLoad={reloadUsers}
+              />
             ) : !showRbacRolesGrid ? (
               <Box sx={{ p: 2, flex: 1, overflow: 'auto' }}>
                 <Typography variant="title2" gutterBottom>
                   {!isCampaign
-                    ? section === 'users'
-                      ? 'Users'
-                      : 'Groups'
+                    ? 'Groups'
                     : (CAMPAIGN_NAV.find((item) => item.key === section)?.title ?? 'Section')}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   {!isCampaign
-                    ? 'Shell matches Figma — connect Users or Groups workflows here when ready.'
+                    ? 'Shell matches Figma — connect Groups workflows here when ready.'
                     : (() => {
                         const cap = CAMPAIGN_NAV.find((item) => item.key === section)?.caption?.trim()
                         return [cap, 'Connect this workflow when ready.']

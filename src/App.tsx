@@ -8,6 +8,7 @@ import { ClosedInteractionPage } from './pages/ClosedInteractionPage'
 import { UserManagementPage } from './pages/UserManagementPage'
 import { PrivilegeSetDetailPage } from './pages/PrivilegeSetDetailPage'
 import { RoleDetailPage } from './pages/RoleDetailPage'
+import { UserDetailPage } from './pages/UserDetailPage'
 import { ExampleSettingsPage } from './pages/ExampleSettingsPage'
 import { HomePage } from './pages/HomePage'
 import {
@@ -42,6 +43,10 @@ export default function App() {
           <Route
             path="/closed-interaction/user-management/privilege-sets/:privilegeSetId"
             element={<PrivilegeSetDetailPage />}
+          />
+          <Route
+            path="/closed-interaction/user-management/users/:userId"
+            element={<UserDetailPage />}
           />
           <Route path="/closed-interaction/user-management" element={<UserManagementPage />} />
           <Route path="/date-time" element={<DateTimeShowcasePage />} />

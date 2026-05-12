@@ -5,6 +5,7 @@
 import type { UserManagementRoleRow } from '../data/userManagementRoles'
 import type { PrivilegeSetRow } from '../data/privilegeSets'
 import type { PrivilegeSetDetailModel } from '../data/privilegeSetDetailData'
+import type { UserManagementDirectoryRow } from '../data/userManagementUsers'
 
 const API = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? ''
 
@@ -28,6 +29,13 @@ async function jres<T>(path: string, init?: RequestInit): Promise<T> {
 
 export async function fetchRoles(): Promise<UserManagementRoleRow[]> {
   return jres('/api/roles')
+}
+
+/** Full assignable directory (empty query). Server search is token-based; UM grid does column search client-side. */
+export async function fetchDirectoryUsers(query = ''): Promise<UserManagementDirectoryRow[]> {
+  const q = query.trim()
+  const path = q.length ? `/api/users?q=${encodeURIComponent(q)}` : '/api/users'
+  return jres(path)
 }
 
 export async function createRole(body: {

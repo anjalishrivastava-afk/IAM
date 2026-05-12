@@ -59,6 +59,10 @@ function assignmentsAsAssignable(names: Set<string>): AssignableUser[] {
       displayName: raw,
       email: '',
       branch: undefined,
+      channel: 'Voice',
+      capacity: 70,
+      campaigns: '—',
+      groups: [],
       source: 'rbac_assignment',
     })
     covered.add(n)
@@ -84,7 +88,14 @@ export function assignmentCanonicalNameLookup(db: Database.Database): Map<string
 function scoreAssignableUser(user: AssignableUser, query: string): number {
   return scoreFieldsAgainstQuery(
     user.displayName,
-    [user.email, user.branch ?? '', user.id],
+    [
+      user.email,
+      user.branch ?? '',
+      user.id,
+      user.channel ?? '',
+      user.campaigns ?? '',
+      (user.groups ?? []).join(' '),
+    ],
     query,
   )
 }
@@ -114,7 +125,14 @@ export function searchAssignableUsers(db: Database.Database, query: string): {
 
   if (users.length === 0) {
     const blobMatch = all.filter((u) => {
-      const blob = [u.displayName, u.email, u.branch ?? ''].join(' ')
+      const blob = [
+        u.displayName,
+        u.email,
+        u.branch ?? '',
+        u.channel ?? '',
+        u.campaigns ?? '',
+        ...(u.groups ?? []),
+      ].join(' ')
       return substantiveTokensCoverAll(tokens, blob) || tokens.every((t) => tokenMatchesText(t, blob))
     })
     users = blobMatch.sort((a, b) => scoreAssignableUser(b, q) - scoreAssignableUser(a, q))

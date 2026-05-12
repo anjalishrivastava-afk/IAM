@@ -11,6 +11,7 @@ import { getDb } from './db.js'
 import { formatCreatedAtLabel, nowIso } from './format.js'
 import { buildMinimalCategoriesForNewPs, insertPrivilegeTree, runSeed, seedIfEmpty, wipeDatabase } from './seed.js'
 import { registerCopilotRoutes } from './copilot/copilotRoutes.js'
+import { normalizeSearch } from './textSearch.js'
 import { searchAssignableUsers } from './userSearch.js'
 import { removeUsersFromOtherRoles } from './roleAssignments.js'
 import {
@@ -30,18 +31,49 @@ seedIfEmpty()
 
 registerCopilotRoutes(app)
 
+function buildAssignedRoleByUserNorm(
+  db: ReturnType<typeof getDb>,
+): Map<string, { roleId: string; roleName: string }> {
+  const rows = db
+    .prepare(
+      `SELECT rau.user_name AS user_name, r.id AS role_id, r.role_name AS role_name
+       FROM role_assigned_user rau
+       INNER JOIN role r ON r.id = rau.role_id`,
+    )
+    .all() as { user_name: string; role_id: string; role_name: string }[]
+  const m = new Map<string, { roleId: string; roleName: string }>()
+  for (const row of rows) {
+    const k = normalizeSearch(row.user_name)
+    if (!k || m.has(k)) continue
+    m.set(k, { roleId: row.role_id, roleName: row.role_name })
+  }
+  return m
+}
+
 /** Mock directory + RBAC-assignee identities (mentions / picker + copilot parity) */
 app.get('/api/users', (req, res) => {
   const q = typeof req.query.q === 'string' ? req.query.q : ''
-  const { users } = searchAssignableUsers(getDb(), q)
+  const db = getDb()
+  const { users } = searchAssignableUsers(db, q)
+  const roleByNorm = buildAssignedRoleByUserNorm(db)
   res.json(
-    users.map((u) => ({
-      id: u.id,
-      displayName: u.displayName,
-      email: u.email || null,
-      branch: u.branch ?? null,
-      source: u.source,
-    })),
+    users.map((u) => {
+      const nk = normalizeSearch(u.displayName)
+      const assigned = nk ? roleByNorm.get(nk) : undefined
+      return {
+        id: u.id,
+        displayName: u.displayName,
+        email: u.email || null,
+        branch: u.branch ?? null,
+        source: u.source,
+        assignedRoleId: assigned?.roleId ?? null,
+        assignedRoleName: assigned?.roleName ?? null,
+        channel: u.channel ?? null,
+        capacity: typeof u.capacity === 'number' ? u.capacity : null,
+        campaigns: u.campaigns ?? null,
+        groups: Array.isArray(u.groups) ? u.groups : [],
+      }
+    }),
   )
 })
 
