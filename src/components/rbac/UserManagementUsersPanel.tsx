@@ -579,6 +579,7 @@ export function UserManagementUsersPanel({
           </Typography>
 
           <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1.5} justifyContent="flex-end">
+            {/* Search */}
             <Box
               sx={{
                 display: 'flex',
@@ -615,19 +616,13 @@ export function UserManagementUsersPanel({
                     '&.Mui-focused fieldset': { border: 'none' },
                   },
                   '& .MuiSelect-select': {
-                    py: 1,
-                    pr: 3,
-                    pl: 1,
-                    typography: 'body2',
-                    display: 'flex',
-                    alignItems: 'center',
+                    py: 1, pr: 3, pl: 1, typography: 'body2',
+                    display: 'flex', alignItems: 'center',
                   },
                 }}
               >
                 {UM_USER_SEARCH_OPTIONS.map((o) => (
-                  <MenuItem key={o.value} value={o.value}>
-                    {o.label}
-                  </MenuItem>
+                  <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
                 ))}
               </TextField>
               <EnhancedTextField
@@ -642,43 +637,42 @@ export function UserManagementUsersPanel({
                   setPaginationModel((p) => ({ ...p, page: 0 }))
                 }}
                 sx={{
-                  flex: '1 1 auto',
-                  minWidth: 0,
+                  flex: '1 1 auto', minWidth: 0,
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: 0,
-                    minHeight: 40,
+                    borderRadius: 0, minHeight: 40,
                     '& fieldset': { border: 'none' },
                     '&:hover fieldset': { border: 'none' },
                     '&.Mui-focused fieldset': { border: 'none' },
                   },
                 }}
-                slotProps={{
-                  input: {
-                    startAdornment: <Icon name="magnifying-glass" size="sm" />,
-                  },
-                }}
+                slotProps={{ input: { startAdornment: <Icon name="magnifying-glass" size="sm" /> } }}
               />
             </Box>
 
+            {/* Export — outlined */}
+            <Button
+              variant="outlined"
+              color="neutral"
+              size="medium"
+              startIcon={<Icon name="export" size="sm" />}
+              onClick={() => setSnack('Export is not wired in this prototype.')}
+            >
+              Export
+            </Button>
+
+            {/* Invite User — split button */}
             <Box
               ref={splitCreateRef}
               sx={(t: Theme) => {
                 const r = t.spacing(1)
                 return {
-                  display: 'inline-flex',
-                  alignItems: 'stretch',
-                  flexShrink: 0,
-                  borderRadius: r,
-                  overflow: 'hidden',
-                  boxShadow: t.shadows[2],
+                  display: 'inline-flex', alignItems: 'stretch', flexShrink: 0,
+                  borderRadius: r, overflow: 'hidden', boxShadow: t.shadows[2],
                   '& .MuiButton-root': { margin: 0, borderRadius: 0 },
                   '& .split-main': {
-                    textTransform: 'none',
-                    fontWeight: t.typography.fontWeightMedium,
+                    textTransform: 'none', fontWeight: t.typography.fontWeightMedium,
                     fontSize: t.typography.pxToRem(14),
-                    px: t.spacing(2),
-                    py: `${10}px`,
-                    minHeight: 40,
+                    px: t.spacing(2), py: `${10}px`, minHeight: 40,
                     borderRight: `1px solid ${splitLine}`,
                   },
                   '& .split-menu': { minWidth: 44, px: `${10}px`, py: `${10}px`, minHeight: 40 },
@@ -686,37 +680,33 @@ export function UserManagementUsersPanel({
               }}
             >
               <Button
-                variant="contained"
-                color="primary"
-                size="medium"
-                disableElevation
+                variant="contained" color="primary" size="medium" disableElevation
                 className="split-main"
-                sx={{
-                  borderTopLeftRadius: (t: Theme) => `${t.spacing(1)}`,
-                  borderBottomLeftRadius: (t: Theme) => `${t.spacing(1)}`,
-                }}
+                sx={{ borderTopLeftRadius: (t: Theme) => t.spacing(1), borderBottomLeftRadius: (t: Theme) => t.spacing(1) }}
                 onClick={() => setInviteOpen(true)}
               >
-                Create User
+                Invite User
               </Button>
               <Button
-                variant="contained"
-                color="primary"
-                size="medium"
-                disableElevation
+                variant="contained" color="primary" size="medium" disableElevation
                 className="split-menu"
-                aria-label="Create user options"
-                aria-haspopup="true"
+                aria-label="Invite user options" aria-haspopup="true"
                 aria-expanded={createMenuOpen ? 'true' : undefined}
-                sx={{
-                  borderTopRightRadius: (t: Theme) => `${t.spacing(1)}`,
-                  borderBottomRightRadius: (t: Theme) => `${t.spacing(1)}`,
-                }}
+                sx={{ borderTopRightRadius: (t: Theme) => t.spacing(1), borderBottomRightRadius: (t: Theme) => t.spacing(1) }}
                 onClick={() => setCreateMenuOpen((o) => !o)}
               >
                 <Icon name="caret-down" size="sm" sx={{ display: 'block', color: 'inherit' }} aria-hidden />
               </Button>
             </Box>
+
+            {/* Create User — primary */}
+            <Button
+              variant="contained" color="primary" size="medium"
+              startIcon={<Icon name="user-plus" size="sm" />}
+              onClick={() => setSnack('Create user is not wired in this prototype.')}
+            >
+              Create User
+            </Button>
           </Stack>
         </Box>
 
@@ -732,18 +722,18 @@ export function UserManagementUsersPanel({
                 <MenuItem
                   onClick={() => {
                     setCreateMenuOpen(false)
-                    setSnack('Import users is not wired in this prototype.')
+                    setInviteOpen(true)
                   }}
                 >
-                  Import users
+                  Invite Single
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
                     setCreateMenuOpen(false)
-                    setInviteOpen(true)
+                    setSnack('Bulk Invite is not wired in this prototype.')
                   }}
                 >
-                  Create manually
+                  Bulk Invite
                 </MenuItem>
               </MenuList>
             </Paper>

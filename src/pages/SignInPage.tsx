@@ -394,9 +394,9 @@ export function SignInPage() {
               sx={{ textAlign: 'center', fontSize: 14, fontWeight: 500, letterSpacing: '0.1px', m: 0 }}
             >
               <Box component="span" sx={{ color: 'text.primary' }}>
-                New to Exotel?
-              </Box>{' '}
-              <Link href="#" underline="hover" sx={{ color: 'info.main', fontWeight: 500, fontSize: 14 }}>
+              New to Exotel?
+            </Box>{' '}
+              <Link href="/signup" underline="hover" sx={{ color: 'info.main', fontWeight: 500, fontSize: 14 }}>
                 Sign up
               </Link>
             </Typography>

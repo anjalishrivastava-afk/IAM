@@ -21,11 +21,28 @@ import {
 } from './pages/rbacUiImpact/PatternWorkspaceSettingsDemoPage'
 import { RbacUiImpactHubPage } from './pages/rbacUiImpact/RbacUiImpactHubPage'
 import { SignInPage } from './pages/SignInPage'
+import { SignUpPage } from './pages/SignUpPage'
+import { AdminLayout } from './layout/AdminLayout'
+import { AdminUserManagementPage } from './pages/admin/AdminUserManagementPage'
+import { SignupScreen } from './pages/SignupScreen'
+import { RoleStep } from './pages/onboarding/RoleStep'
+import { NeedStep } from './pages/onboarding/NeedStep'
+import { PersonalizeStep } from './pages/onboarding/PersonalizeStep'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/sign-in" element={<SignInPage />} />
+      <Route path="/sign-up" element={<SignUpPage />} />
+      <Route path="/signup" element={<SignupScreen />} />
+      <Route path="/onboarding/role" element={<RoleStep />} />
+      <Route path="/onboarding/need" element={<NeedStep />} />
+      <Route path="/onboarding/personalize" element={<PersonalizeStep />} />
+      <Route element={<AdminLayout />}>
+        <Route path="/admin" element={<Navigate to="/admin/user-management" replace />} />
+        <Route path="/admin/user-management" element={<UserManagementPage />} />
+        <Route path="/admin/overview" element={<AdminUserManagementPage />} />
+      </Route>
       <Route element={<RequireAuth />}>
         <Route path="/rbac-ui-impact/pattern/stepper" element={<PatternStepperRoleDemoPage />} />
         <Route element={<AppLayout />}>
