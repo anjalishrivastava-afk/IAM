@@ -1,82 +1,145 @@
-# React + TypeScript + Vite
+# IAM Design Playground
 
-## RBAC prototype — local API + SQLite
+A high-fidelity prototype for the **Exotel Identity & Access Management (IAM)** system, built with React, TypeScript, and the Signal Design System.
 
-Two terminals:
+---
 
-1. **API** — `cd server && npm install && npm run seed && npm run dev` — Express on port **3333**, DB file `server/data/dev.db` (ignored by git). Reseed: `npm run db:reset`.
-2. **UI** — `npm install && npm run dev` — Vite proxies `/api` to `http://localhost:3333`. Override with env `VITE_API_URL` if needed.
+## Overview
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This playground demonstrates the full IAM product experience including onboarding, user management, role-based access control, admin portal, and licensing — all wired with a real SQLite backend and live data.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+### Onboarding Flow
+- 4-step signup: Account creation → Role selection → Primary need → Workspace personalisation
+- State persisted in `localStorage` via `OnboardingContext`
+- Dynamic greeting and recommendations based on selected use cases
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+### Home Screen
+- AI Workspace Assistant with suggested action chips
+- Quick Access links (Admin Portal, Developer Portal)
+- Products grid (Contact Center, Engage, Chatbot, Voicebot, CQA, AI Assist)
+- Getting Started checklist, Recommendations, Need Help
 
-Note: This will impact Vite dev & build performances.
+### Admin Portal
+| Screen | Features |
+|---|---|
+| **Users** | New columns: Status, Tenants, Products, MFA, Last Active · Role/Product/Tenant/Status filters · Invite User drawer · Bulk Invite drawer · Create User full-page flow |
+| **Roles** | 4 IAM roles (Admin, Manager, Member, Auditor) · System/Custom type badges · Role detail page |
+| **Permissions** | Accordion groups per category · Per-permission toggles · Group Select All · Live search · Discard Changes |
+| **License Management** | Stat cards · Expiring/Over-Limit alert banners · Product cards with seat/usage progress bars |
 
-## Expanding the ESLint configuration
+### Create User (Full Page)
+Two-column form with:
+- Basic Details (Full Name)
+- Email Address + Password
+- Role assignment
+- Tenant multi-select
+- Security Settings (MFA, Invitation Email) with checkboxes
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Navigation
+- Persistent top bar: Exotel wordmark · Credits chip · Avatar with presence dot
+- Collapsible admin sidebar with search
+- Back navigation preserves table state (filters, search, pagination) via `sessionStorage`
+- Detail pages (User, Role, Privilege Set) open inline within AdminLayout
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, TypeScript, Vite 8 |
+| Design System | Signal DS (`@exotel-npm-dev/signal-design-system`) |
+| Routing | React Router v7 |
+| State | React Context + `localStorage` / `sessionStorage` |
+| Backend | Express 5, SQLite (`better-sqlite3`) |
+| AI Features | Google Gemini API (optional) |
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm
+
+### Frontend
+
+```bash
+cd Exotel-Design-Playground
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Opens at **http://localhost:5173**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### Backend
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd Exotel-Design-Playground/server
+npm install
+npm run dev
 ```
+
+API available at **http://localhost:3333**
+
+#### Reset database
+```bash
+npm run db:reset
+```
+
+#### Enable AI Copilot (optional)
+Create `server/.env`:
+```
+GEMINI_API_KEY=your_key_here
+```
+
+---
+
+## Routes
+
+| Route | Screen |
+|---|---|
+| `/signup` | Signup (Step 1) |
+| `/onboarding/role` | Role selection (Step 2) |
+| `/onboarding/need` | Primary need + use cases (Step 3) |
+| `/onboarding/personalize` | Team size + industry (Step 4) |
+| `/` | Home |
+| `/admin` | Admin Portal → redirects to Users |
+| `/admin/users` | Users table |
+| `/admin/user-management` | Roles & Privileges |
+| `/admin/users/create` | Create User (full page) |
+| `/admin/users/:userId` | User detail |
+| `/admin/roles/:roleId` | Role detail |
+| `/admin/license-management` | License Management |
+
+---
+
+## Project Structure
+
+```
+Exotel-Design-Playground/
+├── src/
+│   ├── components/
+│   │   ├── onboarding/       # Stepper, SelectionCard, OnboardingLayout
+│   │   └── rbac/             # DataGrid panels, Drawers
+│   ├── context/              # OnboardingContext
+│   ├── layout/               # AppLayout, AdminLayout, TopBar
+│   ├── lib/                  # onboardingCopy.ts (all strings)
+│   ├── pages/
+│   │   ├── admin/            # LicenseManagementPage, CreateUserPage
+│   │   └── onboarding/       # RoleStep, NeedStep, PersonalizeStep
+│   └── data/                 # Static seed data (roles, users, privilege sets)
+└── server/
+    ├── src/                  # Express API + SQLite
+    └── seed-data/            # roles.json, privilege_sets.json, role_users.json
+```
+
+---
+
+## License
+
+Internal prototype — Exotel 2026
