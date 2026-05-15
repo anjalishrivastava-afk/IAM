@@ -1,6 +1,164 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Icon, IconButton, Stack, Typography } from '@exotel-npm-dev/signal-design-system'
+import { Popover } from '@mui/material'
 import { useOnboarding } from '../context/OnboardingContext'
+
+// ─── Switch Application dropdown ─────────────────────────────────────────────
+
+const APPS = [
+  {
+    label: 'Contact Centre',
+    bg: '#7C3AED',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12Z" fill="white"/>
+        <path d="M12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="white"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'Chatbot',
+    bg: '#16A34A',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z" fill="white"/>
+        <rect x="6" y="7" width="12" height="2" rx="1" fill="#16A34A"/>
+        <rect x="6" y="11" width="8" height="2" rx="1" fill="#16A34A"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'Voicebot',
+    bg: '#C2410C',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 1C9.24 1 7 3.24 7 6V12C7 14.76 9.24 17 12 17C14.76 17 17 14.76 17 12V6C17 3.24 14.76 1 12 1Z" fill="white"/>
+        <path d="M19 11H18C18 14.31 15.31 17 12 17C8.69 17 6 14.31 6 11H5C5 14.53 7.61 17.43 11 17.93V21H13V17.93C16.39 17.43 19 14.53 19 11Z" fill="white"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'Call Quality Analysis',
+    bg: '#1D4ED8',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="12" width="4" height="9" rx="1" fill="white"/>
+        <rect x="10" y="7" width="4" height="14" rx="1" fill="white"/>
+        <rect x="17" y="3" width="4" height="18" rx="1" fill="white"/>
+      </svg>
+    ),
+  },
+  {
+    label: 'OneAssist',
+    bg: '#4338CA',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 3L12 7M12 17L12 21M3 12L7 12M17 12L21 12M5.64 5.64L8.46 8.46M15.54 15.54L18.36 18.36M18.36 5.64L15.54 8.46M8.46 15.54L5.64 18.36" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+        <circle cx="12" cy="12" r="3" fill="white"/>
+      </svg>
+    ),
+  },
+]
+
+function AppLauncherDropdown() {
+  const navigate = useNavigate()
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null)
+
+  const handleNav = (path: string) => {
+    setAnchor(null)
+    navigate(path)
+  }
+
+  return (
+    <>
+      <IconButton
+        aria-label="App launcher"
+        onClick={e => setAnchor(e.currentTarget as HTMLElement)}
+        sx={{ width: 40, height: 40, borderRadius: '100px', color: anchor ? 'primary.main' : 'text.primary', flexShrink: 0 }}
+      >
+        <Icon name="squares-four" size="sm" />
+      </IconButton>
+
+      <Popover
+        open={Boolean(anchor)}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5, borderRadius: 2, minWidth: 260,
+              boxShadow: 3,
+              border: '1px solid', borderColor: 'divider',
+            },
+          },
+        }}
+      >
+        <Box sx={{ p: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Typography sx={{ fontSize: 13, fontWeight: 600, color: 'text.primary' }}>
+            Switch Application
+          </Typography>
+        </Box>
+
+        {/* Home — first item */}
+        <Box sx={{ pt: 1, pb: 0.5 }}>
+          <Box
+            onClick={() => handleNav('/')}
+            sx={{
+              display: 'flex', alignItems: 'center', gap: 1.5,
+              px: 1.5, py: 1, cursor: 'pointer', borderRadius: 1, mx: 0.5,
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
+          >
+            <Box
+              sx={{
+                width: 36, height: 36, borderRadius: 1.5, bgcolor: 'primary.main',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}
+            >
+              <Icon name="house" size="sm" style={{ color: '#fff' }} />
+            </Box>
+            <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>
+              Home
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Divider */}
+        <Box sx={{ mx: 1.5, borderBottom: '1px solid', borderColor: 'divider', mb: 0.5 }} />
+
+        {/* Product apps */}
+        <Box sx={{ pb: 1 }}>
+          {APPS.map(app => (
+            <Box
+              key={app.label}
+              onClick={() => setAnchor(null)}
+              sx={{
+                display: 'flex', alignItems: 'center', gap: 1.5,
+                px: 1.5, py: 1, cursor: 'pointer', borderRadius: 1, mx: 0.5,
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 36, height: 36, borderRadius: 1.5, bgcolor: app.bg,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}
+              >
+                {app.icon}
+              </Box>
+              <Typography sx={{ fontSize: 14, fontWeight: 500, color: 'text.primary' }}>
+                {app.label}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </Popover>
+    </>
+  )
+}
 
 // ─── Exotel wordmark SVG ──────────────────────────────────────────────────────
 
@@ -37,9 +195,7 @@ export function TopBar({ onLogout }: { onLogout: () => void }) {
     >
       {/* Left side */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1, minWidth: 0 }}>
-        <IconButton aria-label="App launcher" sx={{ width: 40, height: 40, borderRadius: '100px', color: 'text.primary', flexShrink: 0 }}>
-          <Icon name="squares-four" size="sm" />
-        </IconButton>
+        <AppLauncherDropdown />
 
         <Box
           onClick={() => navigate('/')}
@@ -52,15 +208,15 @@ export function TopBar({ onLogout }: { onLogout: () => void }) {
         <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
           <Stack
             direction="row" alignItems="center" spacing={0.5}
-            sx={{ px: 1.5, py: '5px', bgcolor: '#F0FDF4', border: '1px solid #9AD7AF', borderRadius: 1, userSelect: 'none' }}
+            sx={{ px: 1.5, py: '5px', bgcolor: 'success.50', border: '1px solid', borderColor: 'success.200', borderRadius: 1, userSelect: 'none' }}
           >
-            <Box sx={{ display: 'flex', color: '#016630', flexShrink: 0 }}>
+            <Box sx={{ display: 'flex', color: 'success.dark', flexShrink: 0 }}>
               <Icon name="wallet" size="sm" />
             </Box>
-            <Typography sx={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 500, color: '#008236', letterSpacing: '-0.15px', lineHeight: '20px' }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 500, color: 'success.main', letterSpacing: '-0.15px', lineHeight: '20px' }}>
               Credits:
             </Typography>
-            <Typography sx={{ fontFamily: "'Inter', sans-serif", fontSize: 12, fontWeight: 600, color: '#016630', letterSpacing: '-0.15px', lineHeight: '20px' }}>
+            <Typography sx={{ fontSize: 12, fontWeight: 600, color: 'success.dark', letterSpacing: '-0.15px', lineHeight: '20px' }}>
               ₹12,453
             </Typography>
           </Stack>
@@ -72,12 +228,12 @@ export function TopBar({ onLogout }: { onLogout: () => void }) {
         sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0, cursor: 'pointer' }}
         onClick={onLogout} title="Click to log out" role="button" aria-label="User menu"
       >
-        <Box sx={{ width: 32, height: 32, bgcolor: '#5C6BC0', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Typography sx={{ color: '#ffffff', fontSize: 14, fontWeight: 500, fontFamily: "'Noto Sans','Inter',sans-serif", letterSpacing: '0.14px', lineHeight: '20px', userSelect: 'none' }}>
+        <Box sx={{ width: 32, height: 32, bgcolor: 'primary.light', borderRadius: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Typography sx={{ color: 'primary.contrastText', fontSize: 14, fontWeight: 500, letterSpacing: '0.14px', lineHeight: '20px', userSelect: 'none' }}>
             {initial}
           </Typography>
         </Box>
-        <Box sx={{ position: 'absolute', width: 8, height: 8, bgcolor: '#2E7D32', borderRadius: '100px', bottom: -2, right: -2, border: '2px solid', borderColor: 'background.paper' }} />
+        <Box sx={{ position: 'absolute', width: 8, height: 8, bgcolor: 'success.dark', borderRadius: '100px', bottom: -2, right: -2, border: '2px solid', borderColor: 'background.paper' }} />
       </Box>
     </Box>
   )
