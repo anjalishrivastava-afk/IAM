@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   server: {
+    // Dev-only proxy for the local Express backend — not used in production
     proxy: {
       '/api': { target: 'http://localhost:3333', changeOrigin: true },
     },
