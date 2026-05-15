@@ -61,6 +61,7 @@ import {
 } from '../api/rbacApi'
 import { RBAC_LISTS_REFRESH_EVENT } from '../constants/rbacEvents'
 import type { UserManagementDirectoryRow } from '../data/userManagementUsers'
+import { USER_MANAGEMENT_ROLE_ROWS } from '../data/userManagementRoles'
 import type { UserManagementRoleRow } from '../data/userManagementRoles'
 import type { PrivilegeSetRow } from '../data/privilegeSets'
 import type { FilterRecords } from '../types/filterRecords'
@@ -91,6 +92,8 @@ export type UserManagementPageVariant = 'rbac' | 'campaign'
 export type UserManagementPageProps = {
   /** `'campaign'` = HDFC Outbound Voice campaign shell (Campaign details pattern). */
   variant?: UserManagementPageVariant
+  /** Hide the secondary left nav rail (used by Admin Portal where the admin sidebar handles navigation). */
+  hideSecondaryNav?: boolean
 }
 
 /** Sub-navigation within User Management (Figma secondary rail). */
@@ -141,8 +144,8 @@ const SECONDARY_NAV_WIDTH_CAMPAIGN_PX = 280
 
 /** Default vs Custom tonal chips — matches Signal DS + Figma “Type” badges. */
 function TypeChip({ scopeType }: { scopeType: UserManagementRoleRow['scopeType'] }) {
-  if (scopeType === 'default') {
-    return <Chip size="small" label="Default" variant="tonal" color="default" />
+  if (scopeType === 'system' || scopeType === 'default') {
+    return <Chip size="small" label="System" variant="tonal" color="default" />
   }
   return <Chip size="small" label="Custom" variant="tonal" color="info" />
 }
@@ -157,7 +160,7 @@ function buildFilters(rows: UserManagementRoleRow[]): ToolbarFilterConfig[] {
       id: 'um_role',
       type: 'select',
       label: 'Role',
-      iconName: 'user',
+
       options: [{ value: 'all', label: 'All' }, ...roles.map((r) => ({ value: r, label: r }))],
       initialValue: 'all',
     },
@@ -165,7 +168,7 @@ function buildFilters(rows: UserManagementRoleRow[]): ToolbarFilterConfig[] {
       id: 'um_assigned',
       type: 'select',
       label: 'Assigned to',
-      iconName: 'users-three',
+
       options: [
         { value: 'all', label: 'All' },
         { value: 'lte10', label: '1–10 users' },
@@ -178,7 +181,7 @@ function buildFilters(rows: UserManagementRoleRow[]): ToolbarFilterConfig[] {
       id: 'um_creator',
       type: 'select',
       label: 'Created By',
-      iconName: 'user',
+
       options: [{ value: 'all', label: 'All' }, ...creators.map((c) => ({ value: c, label: c }))],
       initialValue: 'all',
     },
@@ -186,7 +189,7 @@ function buildFilters(rows: UserManagementRoleRow[]): ToolbarFilterConfig[] {
       id: 'um_created_at',
       type: 'select',
       label: 'Creation Date',
-      iconName: 'calendar-blank',
+
       options: [{ value: 'all', label: 'All' }, ...creationLabels.map((l) => ({ value: l, label: l }))],
       initialValue: 'all',
     },
@@ -270,7 +273,7 @@ function buildPrivilegeFilters(rows: PrivilegeSetRow[]): ToolbarFilterConfig[] {
       id: 'ps_role',
       type: 'select',
       label: 'Role',
-      iconName: 'user',
+
       options: [{ value: 'all', label: 'All' }, ...roleNames.map((r) => ({ value: r, label: r }))],
       initialValue: 'all',
     },
@@ -278,7 +281,7 @@ function buildPrivilegeFilters(rows: PrivilegeSetRow[]): ToolbarFilterConfig[] {
       id: 'ps_assigned',
       type: 'select',
       label: 'Assigned to',
-      iconName: 'users-three',
+
       options: [
         { value: 'all', label: 'All' },
         { value: 'lte10', label: '1–10 roles' },
@@ -291,7 +294,7 @@ function buildPrivilegeFilters(rows: PrivilegeSetRow[]): ToolbarFilterConfig[] {
       id: 'ps_creator',
       type: 'select',
       label: 'Created By',
-      iconName: 'user',
+
       options: [{ value: 'all', label: 'All' }, ...creators.map((c) => ({ value: c, label: c }))],
       initialValue: 'all',
     },
@@ -299,7 +302,7 @@ function buildPrivilegeFilters(rows: PrivilegeSetRow[]): ToolbarFilterConfig[] {
       id: 'ps_created_at',
       type: 'select',
       label: 'Creation Date',
-      iconName: 'calendar-blank',
+
       options: [{ value: 'all', label: 'All' }, ...creationLabels.map((l) => ({ value: l, label: l }))],
       initialValue: 'all',
     },
@@ -452,16 +455,30 @@ const dataGridSx = {
 
 export function UserManagementPage({
   variant: variantProp = 'rbac',
+  hideSecondaryNav = false,
 }: UserManagementPageProps = {}) {
   const variant = variantProp
   const secondaryNavWidthPx =
     variant === 'campaign' ? SECONDARY_NAV_WIDTH_CAMPAIGN_PX : SECONDARY_NAV_WIDTH_RBAC_PX
 
+  // Admin context uses /admin/* routes so detail pages stay within AdminLayout
+  const baseNav = {
+    role:          hideSecondaryNav ? '/admin/roles'          : '/closed-interaction/user-management/roles',
+    privilegeSet:  hideSecondaryNav ? '/admin/privilege-sets' : '/closed-interaction/user-management/privilege-sets',
+  }
+
   const navigate = useNavigate()
   const location = useLocation()
-  const [section, setSection] = useState<string>(() =>
-    variant === 'campaign' ? 'basic-settings' : 'roles',
-  )
+  const [section, setSection] = useState<string>(() => {
+    if (variant === 'campaign') return 'basic-settings'
+    const st = location.state as { adminSection?: string } | null | undefined
+    // Explicit state wins
+    if (st?.adminSection === 'users') return 'users'
+    if (st?.adminSection === 'roles') return 'roles'
+    // Fall back to pathname — /admin/users always opens Users grid
+    if (location.pathname === '/admin/users') return 'users'
+    return 'roles'
+  })
   const [mainTab, setMainTab] = useState<'roles' | 'privileges'>('roles')
   const [search, setSearch] = useState('')
   const [filterRecords, setFilterRecords] = useState<FilterRecords>(() => ({ ...INITIAL_FILTERS }))
@@ -477,7 +494,7 @@ export function UserManagementPage({
   const [privMenuAnchorEl, setPrivMenuAnchorEl] = useState<HTMLElement | null>(null)
   const [privMenuRowId, setPrivMenuRowId] = useState<string | null>(null)
 
-  const [roleRows, setRoleRows] = useState<UserManagementRoleRow[]>([])
+  const [roleRows, setRoleRows] = useState<UserManagementRoleRow[]>(USER_MANAGEMENT_ROLE_ROWS)
   const [privilegeRows, setPrivilegeRows] = useState<PrivilegeSetRow[]>([])
   const [listError, setListError] = useState<string | null>(null)
   const [userRows, setUserRows] = useState<UserManagementDirectoryRow[]>([])
@@ -547,7 +564,8 @@ export function UserManagementPage({
     try {
       setListError(null)
       const [r, p] = await Promise.all([fetchRoles(), fetchPrivilegeSets()])
-      setRoleRows(r)
+      // Only replace static fallback if backend returns real data
+      if (r.length > 0) setRoleRows(r)
       setPrivilegeRows(p)
     } catch (e) {
       setListError(e instanceof Error ? e.message : 'Failed to load RBAC data')
@@ -609,7 +627,7 @@ export function UserManagementPage({
       setNewRoleOpen(false)
       setNewRoleName('')
       setNewRoleDesc('')
-      navigate(`/closed-interaction/user-management/roles/${row.id}`)
+      navigate(`${baseNav.role}/${row.id}`)
     } catch (e) {
       setListError(e instanceof Error ? e.message : 'Create role failed')
     }
@@ -629,7 +647,7 @@ export function UserManagementPage({
       setNewPsOpen(false)
       setNewPsName('')
       setNewPsDesc('')
-      navigate(`/closed-interaction/user-management/privilege-sets/${row.id}`)
+      navigate(`${baseNav.privilegeSet}/${row.id}`)
     } catch (e) {
       setListError(e instanceof Error ? e.message : 'Create privilege set failed')
     }
@@ -1022,7 +1040,7 @@ export function UserManagementPage({
       const el = event.target as HTMLElement
       if (el.closest('.MuiCheckbox-root, [class*="checkbox"]')) return
       if (el.closest('button')) return
-      navigate(`/closed-interaction/user-management/roles/${params.row.id}`)
+      navigate(`${baseNav.role}/${params.row.id}`)
     },
     [navigate],
   )
@@ -1033,11 +1051,11 @@ export function UserManagementPage({
       handleMenuClose()
       if (!id) return
       if (action === 'view') {
-        navigate(`/closed-interaction/user-management/roles/${id}`)
+        navigate(`${baseNav.role}/${id}`)
         return
       }
       if (action === 'edit') {
-        navigate(`/closed-interaction/user-management/roles/${id}?mode=edit`)
+        navigate(`${baseNav.role}/${id}?mode=edit`)
         return
       }
       if (action === 'delete') {
@@ -1062,7 +1080,7 @@ export function UserManagementPage({
         const row = await duplicateRole(id)
         await reloadRbacsLists()
         window.dispatchEvent(new CustomEvent(RBAC_LISTS_REFRESH_EVENT))
-        navigate(`/closed-interaction/user-management/roles/${row.id}`)
+        navigate(`${baseNav.role}/${row.id}`)
       } catch (e) {
         setListError(e instanceof Error ? e.message : 'Duplicate role failed')
       }
@@ -1084,7 +1102,7 @@ export function UserManagementPage({
       const el = event.target as HTMLElement
       if (el.closest('.MuiCheckbox-root, [class*="checkbox"]')) return
       if (el.closest('button')) return
-      navigate(`/closed-interaction/user-management/privilege-sets/${params.row.id}`)
+      navigate(`${baseNav.privilegeSet}/${params.row.id}`)
     },
     [navigate],
   )
@@ -1095,11 +1113,11 @@ export function UserManagementPage({
       handlePrivMenuClose()
       if (!id) return
       if (action === 'view') {
-        navigate(`/closed-interaction/user-management/privilege-sets/${id}`)
+        navigate(`${baseNav.privilegeSet}/${id}`)
         return
       }
       if (action === 'edit') {
-        navigate(`/closed-interaction/user-management/privilege-sets/${id}?mode=edit`)
+        navigate(`${baseNav.privilegeSet}/${id}?mode=edit`)
         return
       }
       if (action === 'delete') {
@@ -1124,7 +1142,7 @@ export function UserManagementPage({
         const row = await duplicatePrivilegeSet(id)
         await reloadRbacsLists()
         window.dispatchEvent(new CustomEvent(RBAC_LISTS_REFRESH_EVENT))
-        navigate(`/closed-interaction/user-management/privilege-sets/${row.id}`)
+        navigate(`${baseNav.privilegeSet}/${row.id}`)
       } catch (e) {
         setListError(e instanceof Error ? e.message : 'Duplicate privilege set failed')
       }
@@ -1403,7 +1421,7 @@ export function UserManagementPage({
           pb: hasCampaignEditFooter ? 10 : 0,
         }}
       >
-        {/* Full-width heading strip — Figma 1:20762 */}
+        {/* Full-width heading strip — hidden in admin context (sidebar handles title) */}
         <Box
           sx={{
             flexShrink: 0,
@@ -1411,6 +1429,7 @@ export function UserManagementPage({
             py: 1.5,
             borderBottom: 1,
             borderColor: 'divider',
+            display: hideSecondaryNav ? 'none' : undefined,
           }}
         >
           <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
@@ -1509,20 +1528,19 @@ export function UserManagementPage({
             minHeight: 0,
             minWidth: 0,
             width: '100%',
-            gridTemplateColumns: {
-              xs: 'minmax(0, 1fr)',
-              md: `${secondaryNavWidthPx}px minmax(0, 1fr)`,
-            },
-            gridTemplateRows: {
-              xs: 'auto minmax(0, 1fr)',
-              md: 'minmax(0, 1fr)',
-            },
+            gridTemplateColumns: hideSecondaryNav
+              ? 'minmax(0, 1fr)'
+              : { xs: 'minmax(0, 1fr)', md: `${secondaryNavWidthPx}px minmax(0, 1fr)` },
+            gridTemplateRows: hideSecondaryNav
+              ? 'minmax(0, 1fr)'
+              : { xs: 'auto minmax(0, 1fr)', md: 'minmax(0, 1fr)' },
             alignItems: 'stretch',
           }}
         >
-          {/* Secondary nav — divider uses palette.divider (avoids UA currentColor/black edge) */}
+          {/* Secondary nav — hidden when admin sidebar handles navigation */}
           <Box
             sx={(theme: Theme) => ({
+              display: hideSecondaryNav ? 'none' : undefined,
               gridColumn: { xs: '1', md: '1' },
               gridRow: { xs: '1', md: '1' },
               width: '100%',
@@ -1565,8 +1583,8 @@ export function UserManagementPage({
           <Box
             component="main"
             sx={{
-              gridColumn: { xs: '1', md: '2' },
-              gridRow: { xs: '2', md: '1' },
+              gridColumn: hideSecondaryNav ? '1' : { xs: '1', md: '2' },
+              gridRow: hideSecondaryNav ? '1' : { xs: '2', md: '1' },
               minWidth: 0,
               minHeight: 0,
               /**

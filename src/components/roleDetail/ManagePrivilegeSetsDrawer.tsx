@@ -1,8 +1,11 @@
+/**
+ * Manage Privilege Sets Drawer — Permissions toggle UI.
+ * Drawer shell matches ManageUsersDrawer exactly.
+ * Body: search → accordions per group → per-permission Switch rows.
+ */
 import {
-  Fragment,
   useCallback,
   useEffect,
-  useMemo,
   useState,
   type ChangeEvent,
   type MouseEvent as ReactMouseEvent,
@@ -18,642 +21,409 @@ import type { Theme } from '@mui/material/styles'
 import {
   Box,
   Button,
-  Chip,
+  Divider,
   Drawer,
   EnhancedTextField,
   Icon,
   IconButton,
   Stack,
-  Tab,
-  Tabs,
+  Switch,
   Tooltip,
   Typography,
 } from '@exotel-npm-dev/signal-design-system'
-import { fetchPrivilegeSetDetail } from '../../api/rbacApi'
-import type { PrivilegeSetDetailModel } from '../../data/privilegeSetDetailData'
 import type { PrivilegeSetRow } from '../../data/privilegeSets'
-import { RbacListEmptyPlaceholder, rbacQuotedSearch } from './RbacListEmptyPlaceholder'
 
 const HEADER_BG = '#f1f1f1'
-
-/** Matches Manage Users drawer width (node 18:6117). */
 const DRAWER_WIDTH_PX = 726
 
-/** App route segment for privilege set detail — keep in sync with `App.tsx`. */
-export function privilegeSetDetailPath(privilegeSetId: string): string {
-  return `/closed-interaction/user-management/privilege-sets/${encodeURIComponent(privilegeSetId)}`
+// ─── Permission catalogue ─────────────────────────────────────────────────────
+
+const PERMISSION_GROUPS = [
+  {
+    id: 'user_management',
+    label: 'User Management',
+    permissions: [
+      { id: 'view_users',   name: 'View Users',   description: 'View user profiles and details'  },
+      { id: 'manage_users', name: 'Manage Users', description: 'Create, edit, and delete users'  },
+      { id: 'invite_users', name: 'Invite Users', description: 'Send user invitations'           },
+    ],
+  },
+  {
+    id: 'role_management',
+    label: 'Role Management',
+    permissions: [
+      { id: 'view_roles',   name: 'View Roles',   description: 'View roles and permissions'      },
+      { id: 'manage_roles', name: 'Manage Roles', description: 'Create and modify custom roles'  },
+    ],
+  },
+  {
+    id: 'product_management',
+    label: 'Product Management',
+    permissions: [
+      { id: 'view_products',   name: 'View Products',   description: 'Access product information'    },
+      { id: 'manage_products', name: 'Manage Products', description: 'Create and configure products' },
+    ],
+  },
+  {
+    id: 'security_settings',
+    label: 'Security & Settings',
+    permissions: [
+      { id: 'org_settings',    name: 'Organization Settings', description: 'Modify organization settings' },
+      { id: 'view_audit_logs', name: 'View Audit Logs',       description: 'Access security audit logs'   },
+      { id: 'manage_api_keys', name: 'Manage API Keys',       description: 'Create and manage API keys'   },
+    ],
+  },
+]
+
+const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  Admin:   ['org_settings'],
+  Manager: ['view_users', 'manage_users', 'invite_users', 'view_roles', 'manage_roles', 'view_products', 'manage_products', 'org_settings', 'view_audit_logs', 'manage_api_keys'],
+  Member:  ['view_products'],
+  Auditor: ['view_audit_logs'],
 }
 
-function openPrivilegeSetInNewTab(privilegeSetId: string): void {
-  const url = new URL(privilegeSetDetailPath(privilegeSetId), window.location.origin).href
-  window.open(url, '_blank', 'noopener,noreferrer')
+function defaultForRole(roleName: string | undefined): Set<string> {
+  if (!roleName) return new Set()
+  return new Set(ROLE_DEFAULT_PERMISSIONS[roleName] ?? [])
 }
 
-function sortIdsStable(ids: Set<string>): string[] {
-  return [...ids].sort((a, b) => a.localeCompare(b))
-}
-
-function countSetDiff(committed: Set<string>, draft: Set<string>): number {
-  let n = 0
-  for (const id of draft) if (!committed.has(id)) n += 1
-  for (const id of committed) if (!draft.has(id)) n += 1
-  return n
-}
-
-function snackbarSlideUp(props: SlideProps) {
-  return <Slide {...props} direction="up" />
-}
-
-const PLAN_GATED_CHIP_TOOLTIP =
-  'This privilege is not included in your current plan. Contact sales to add it to your subscription.'
-
-function PrivilegeChipsPreview({ privilegeSetId }: { privilegeSetId: string }) {
-  const [detail, setDetail] = useState<PrivilegeSetDetailModel | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const d = await fetchPrivilegeSetDetail(privilegeSetId)
-        if (!cancelled) setDetail(d)
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Could not load privileges')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [privilegeSetId])
-
-  if (loading) {
-    return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-        Loading privileges…
-      </Typography>
-    )
-  }
-  if (error) {
-    return (
-      <Typography variant="body2" color="error" sx={{ py: 1 }}>
-        {error}
-      </Typography>
-    )
-  }
-  if (!detail) return null
-
-  const categorySections = detail.categories
-    .map((cat) => {
-      const subgroupsRendered = cat.subgroups
-        .map((sg) => {
-          const granted = sg.permissions.filter((p) => p.granted)
-          if (granted.length === 0) return null
-          return (
-            <Box key={sg.id}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block' }}>
-                {sg.title}
-              </Typography>
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: 0.75,
-                  mt: 0.75,
-                  alignItems: 'flex-start',
-                }}
-              >
-                {granted.map((p) => {
-                  const planGated = Boolean(p.isKey)
-                  const inner = (
-                    <Chip
-                      size="small"
-                      variant="tonal"
-                      color={planGated ? 'warning' : 'info'}
-                      label={p.label}
-                      icon={planGated ? <Icon name="key" size="xs" /> : undefined}
-                      sx={{
-                        maxWidth: '100%',
-                        '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'left' },
-                      }}
-                    />
-                  )
-                  return planGated ? (
-                    <Tooltip key={p.id} title={PLAN_GATED_CHIP_TOOLTIP} placement="top" arrow>
-                      <Box component="span" sx={{ maxWidth: '100%', display: 'inline-flex' }}>
-                        {inner}
-                      </Box>
-                    </Tooltip>
-                  ) : (
-                    <Box key={p.id} component="span" sx={{ display: 'inline-flex', maxWidth: '100%' }}>
-                      {inner}
-                    </Box>
-                  )
-                })}
-              </Box>
-            </Box>
-          )
-        })
-        .filter(Boolean)
-
-      if (subgroupsRendered.length === 0) return null
-
-      return (
-        <Box key={cat.id}>
-          <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.75 }}>
-            {cat.title}
-          </Typography>
-          <Stack spacing={1.75} sx={{ pl: { xs: 0, sm: 0.5 } }}>
-            {subgroupsRendered}
-          </Stack>
-        </Box>
-      )
-    })
-    .filter(Boolean)
-
-  if (categorySections.length === 0) {
-    return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-        No privileges are included in this privilege set yet.
-      </Typography>
-    )
-  }
-
-  return <Stack spacing={2} sx={{ pt: 0.5, pb: 1 }}>{categorySections}</Stack>
-}
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 export interface ManagePrivilegeSetsDrawerProps {
   open: boolean
   onClose: (event?: SyntheticEvent) => void
-  privilegeSets: PrivilegeSetRow[]
-  /** Snapshot from server — draft resets when the drawer opens. */
   assignedPrivilegeSetIds: string[]
   onSave?: (privilegeSetIds: string[]) => void | Promise<void>
+  roleName?: string
+  privilegeSets?: PrivilegeSetRow[]
 }
 
+function snackbarSlideUp(props: SlideProps) { return <Slide {...props} direction="up" /> }
+
+// ─── Component ───────────────────────────────────────────────────────────────
+
 export function ManagePrivilegeSetsDrawer({
-  open,
-  onClose,
-  privilegeSets,
-  assignedPrivilegeSetIds,
-  onSave,
+  open, onClose, onSave, roleName,
 }: ManagePrivilegeSetsDrawerProps) {
-  const [tab, setTab] = useState(0)
-  const [search, setSearch] = useState('')
-  const [draftSet, setDraftSet] = useState<Set<string>>(() => new Set())
-  const [committedSet, setCommittedSet] = useState<Set<string>>(() => new Set())
+  const [enabledPerms, setEnabledPerms] = useState<Set<string>>(() => defaultForRole(roleName))
+  const [committedPerms, setCommittedPerms] = useState<Set<string>>(() => defaultForRole(roleName))
+  const [savePending, setSavePending] = useState(false)
   const [snackbarOpen, setSnackbarOpen] = useState(false)
   const [snackbarMessage, setSnackbarMessage] = useState('')
-  const [savePending, setSavePending] = useState(false)
-
-  const committedKey = useMemo(
-    () => [...assignedPrivilegeSetIds].sort().join('\0'),
-    [assignedPrivilegeSetIds],
+  const [search, setSearch] = useState('')
+  // Track which accordion groups are expanded
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
+    () => new Set(PERMISSION_GROUPS.map((g) => g.id))
   )
 
   useEffect(() => {
     if (!open) return
-    const next = new Set(assignedPrivilegeSetIds)
-    setCommittedSet(next)
-    setDraftSet(new Set(next))
-    setTab(0)
+    const defaults = defaultForRole(roleName)
+    setEnabledPerms(new Set(defaults))
+    setCommittedPerms(new Set(defaults))
     setSearch('')
-  }, [open, committedKey, assignedPrivilegeSetIds])
+    setExpandedGroups(new Set(PERMISSION_GROUPS.map((g) => g.id)))
+  }, [open, roleName])
 
-  const assignedRows = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return privilegeSets
-      .filter((ps) => draftSet.has(ps.id))
-      .filter((ps) => {
-        if (!q) return true
-        return (
-          ps.privilegeSetName.toLowerCase().includes(q) ||
-          (ps.description && ps.description.toLowerCase().includes(q))
-        )
-      })
-      .sort((a, b) => a.privilegeSetName.localeCompare(b.privilegeSetName))
-  }, [privilegeSets, draftSet, search])
+  const totalChanges = (() => {
+    let n = 0
+    for (const id of enabledPerms) if (!committedPerms.has(id)) n++
+    for (const id of committedPerms) if (!enabledPerms.has(id)) n++
+    return n
+  })()
 
-  const unassignedRows = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return privilegeSets
-      .filter((ps) => !draftSet.has(ps.id))
-      .filter((ps) => {
-        if (!q) return true
-        return (
-          ps.privilegeSetName.toLowerCase().includes(q) ||
-          (ps.description && ps.description.toLowerCase().includes(q))
-        )
-      })
-      .sort((a, b) => a.privilegeSetName.localeCompare(b.privilegeSetName))
-  }, [privilegeSets, draftSet, search])
+  const dismissPlain = useCallback((e?: SyntheticEvent | ReactMouseEvent) => {
+    onClose(e as SyntheticEvent | undefined)
+  }, [onClose])
 
-  const rows = tab === 0 ? assignedRows : unassignedRows
-  const assignedCount = useMemo(
-    () => privilegeSets.filter((ps) => draftSet.has(ps.id)).length,
-    [privilegeSets, draftSet],
-  )
-  const unassignedCount = privilegeSets.length - assignedCount
+  const togglePermission = (id: string) => {
+    setEnabledPerms((prev) => {
+      const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next
+    })
+  }
 
-  const searchTrimPrivDrawer = search.trim()
-  const privilegeSetsDrawerEmptyMessaging = useMemo((): { title: string; description: string } | null => {
-    if (rows.length > 0) return null
-    const quoted = rbacQuotedSearch(search)
-    if (tab === 0) {
-      if (assignedCount === 0) {
-        return searchTrimPrivDrawer
-          ? {
-              title: 'No privilege sets assigned',
-              description: `Nothing matches ${quoted || 'that search'}. Clear the search or open the Unassigned tab to attach privilege sets.`,
-            }
-          : {
-              title: 'No privilege sets assigned',
-              description: 'Open the Unassigned tab to attach privilege sets to this role.',
-            }
-      }
-      return {
-        title: quoted ? `No results for ${quoted}` : 'No matching privilege sets',
-        description: 'Try different keywords or clear the search.',
-      }
-    }
-    if (unassignedCount === 0) {
-      return searchTrimPrivDrawer
-        ? {
-            title: quoted ? `No results for ${quoted}` : 'No matching privilege sets',
-            description: 'Try different keywords or clear the search.',
-          }
-        : {
-            title: 'All privilege sets are assigned',
-            description: 'Every catalog privilege set is already linked to this role.',
-          }
-    }
-    return {
-      title: quoted ? `No results for ${quoted}` : 'No matching privilege sets',
-      description: 'Try different keywords or clear the search.',
-    }
-  }, [
-    rows.length,
-    tab,
-    assignedCount,
-    unassignedCount,
-    search,
-    searchTrimPrivDrawer,
-  ])
-
-  const changeStats = useMemo(() => {
-    const total = countSetDiff(committedSet, draftSet)
-    const added: string[] = []
-    const removed: string[] = []
-    for (const id of draftSet) if (!committedSet.has(id)) added.push(id)
-    for (const id of committedSet) if (!draftSet.has(id)) removed.push(id)
-    const name = (pid: string) =>
-      privilegeSets.find((p) => p.id === pid)?.privilegeSetName ?? pid
-    const addedLabels = added.map(name)
-    const removedLabels = removed.map(name)
-    const tooltipParts: string[] = []
-    if (addedLabels.length) tooltipParts.push(`Add: ${addedLabels.join(', ')}`)
-    if (removedLabels.length) tooltipParts.push(`Remove: ${removedLabels.join(', ')}`)
-    return {
-      totalChanges: total,
-      tooltipDetail: tooltipParts.join(' · ') || 'No unsaved changes',
-    }
-  }, [committedSet, draftSet, privilegeSets])
-
-  /** Discard drafts and notify parent — Cancel, backdrop, or Close (✕). */
-  const discardAndDismiss = useCallback(
-    (e?: SyntheticEvent) => {
-      setSearch('')
-      setTab(0)
-      const baseline = new Set(assignedPrivilegeSetIds)
-      setCommittedSet(baseline)
-      setDraftSet(baseline)
-      onClose(e)
-    },
-    [assignedPrivilegeSetIds, onClose],
-  )
-
-  /** After successful save — parent refreshes IDs; drawer only closes. */
-  const dismissPlain = useCallback(
-    (e?: SyntheticEvent) => {
-      setSearch('')
-      setTab(0)
-      onClose(e)
-    },
-    [onClose],
-  )
-
-  const assignIds = useCallback((ids: string[]) => {
-    setDraftSet((prev) => {
+  const toggleGroup = (groupId: string, enable: boolean) => {
+    const group = PERMISSION_GROUPS.find((g) => g.id === groupId)
+    if (!group) return
+    setEnabledPerms((prev) => {
       const next = new Set(prev)
-      for (const id of ids) next.add(id)
+      group.permissions.forEach((p) => enable ? next.add(p.id) : next.delete(p.id))
       return next
     })
-  }, [])
-
-  const removeIds = useCallback((ids: string[]) => {
-    setDraftSet((prev) => {
-      const next = new Set(prev)
-      for (const id of ids) next.delete(id)
-      return next
-    })
-  }, [])
+  }
 
   const handleSave = useCallback(async () => {
-    if (!onSave || savePending) return
+    if (savePending) return
     setSavePending(true)
     try {
-      await Promise.resolve(onSave(sortIdsStable(draftSet)))
+      await Promise.resolve(onSave?.([...enabledPerms]))
+      setCommittedPerms(new Set(enabledPerms))
       dismissPlain()
     } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : typeof e === 'string' ? e : 'Could not save privilege sets'
-      setSnackbarMessage(msg)
-      setSnackbarOpen(true)
+      const msg = e instanceof Error ? e.message : 'Could not save permissions'
+      setSnackbarMessage(msg); setSnackbarOpen(true)
     } finally {
-      setSavePending(false)
-    }
-  }, [draftSet, dismissPlain, onSave, savePending])
+      setSavePending(false) }
+  }, [enabledPerms, onSave, savePending, dismissPlain])
 
-  const handleTabChange = useCallback((_e: SyntheticEvent, v: number) => {
-    setTab(v)
-    setSearch('')
-  }, [])
+  const roleNameUpper = (roleName ?? '').toUpperCase()
+  const q = search.trim().toLowerCase()
+
+  // Filter groups/permissions by search
+  const visibleGroups = PERMISSION_GROUPS.map((group) => ({
+    ...group,
+    permissions: q
+      ? group.permissions.filter(
+          (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+        )
+      : group.permissions,
+  })).filter((g) => g.permissions.length > 0)
 
   return (
     <>
       <Drawer
         anchor="right"
         open={open}
-        onClose={(e?: SyntheticEvent) => discardAndDismiss(e)}
+        onClose={(e?: SyntheticEvent) => dismissPlain(e)}
         slotProps={{
           backdrop: {
             sx: (theme: Theme) => ({
-              backdropFilter: 'blur(1.50px)',
-              WebkitBackdropFilter: 'blur(1.50px)',
-              backgroundColor:
-                theme.palette.mode === 'light' ? 'rgba(15, 23, 42, 0.18)' : 'rgba(0, 0, 0, 0.48)',
+              backdropFilter: 'blur(1.50px)', WebkitBackdropFilter: 'blur(1.50px)',
+              backgroundColor: theme.palette.mode === 'light' ? 'rgba(15, 23, 42, 0.18)' : 'rgba(0, 0, 0, 0.48)',
             }),
           },
           paper: {
             sx: {
               width: { xs: '100%', sm: `${DRAWER_WIDTH_PX}px` },
-              maxWidth: '100vw',
-              boxSizing: 'border-box',
-              boxShadow:
-                '0px 6px 10px rgba(0, 0, 0, 0.14), 0px 1px 18px rgba(0, 0, 0, 0.12)',
+              maxWidth: '100vw', boxSizing: 'border-box',
+              boxShadow: '0px 6px 10px rgba(0, 0, 0, 0.14), 0px 1px 18px rgba(0, 0, 0, 0.12)',
             },
           },
         }}
         headerContent={
-          <Stack spacing={0} sx={{ flexShrink: 0 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                px: 2,
-                py: `${13}px`,
-                bgcolor: HEADER_BG,
-                borderBottom: 1,
-                borderColor: 'divider',
-              }}
-            >
-              <Stack spacing={0.25} sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="title3" component="h2" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
-                  Privilege sets
-                </Typography>
-              </Stack>
-              <IconButton
-                size="small"
-                variant="outlined"
-                aria-label="Close"
-                onClick={(e: ReactMouseEvent) => discardAndDismiss(e)}
-              >
-                <Icon name="x" size="sm" />
-              </IconButton>
-            </Box>
-            <Box
-              sx={{
-                bgcolor: 'background.paper',
-                pb: 1,
-                borderBottom: 1,
-                borderColor: 'divider',
-              }}
-            >
-              <Tabs
-                value={tab}
-                onChange={handleTabChange}
-                aria-label="Privilege set assignment tabs"
-                sx={{
-                  px: 2,
-                  '& .MuiTabs-indicator': { height: 2 },
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    minHeight: 48,
-                    fontWeight: (t: Theme) => t.typography.fontWeightMedium,
-                  },
-                  '& .Mui-selected': { color: 'primary.main', fontWeight: 700 },
-                }}
-              >
-                <Tab label={`Assigned sets (${assignedCount})`} id="tab-assigned-priv-sets" />
-                <Tab label={`Unassigned sets (${unassignedCount})`} id="tab-unassigned-priv-sets" />
-              </Tabs>
-              <Box
-                sx={{
-                  bgcolor: 'surface.elevation1',
-                  px: 2,
-                  py: (theme: Theme) => theme.spacing(1.5),
-                }}
-              >
-                <EnhancedTextField
-                  showLabel={false}
-                  placeholder="Search privilege sets"
-                  value={search}
-                  size="medium"
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-                  fullWidth
-                  slotProps={{
-                    input: {
-                      startAdornment: (
-                        <Box component="span" sx={{ mr: 1, display: 'inline-flex' }}>
-                          <Icon name="magnifying-glass" size="sm" sx={{ opacity: 0.55 }} />
-                        </Box>
-                      ),
-                    },
-                  }}
-                />
-              </Box>
-            </Box>
-          </Stack>
-        }
-        footerActions={
-          <Fragment>
-            <Tooltip
-              title={changeStats.totalChanges === 0 ? 'No unsaved changes' : changeStats.tooltipDetail}
-              placement="top"
-            >
-              <Typography
-                variant="body3"
-                color="text.secondary"
-                sx={{ cursor: 'default', maxWidth: 200, whiteSpace: 'nowrap' }}
-                noWrap
-              >
-                {changeStats.totalChanges === 0
-                  ? 'No changes'
-                  : `${changeStats.totalChanges} change${changeStats.totalChanges === 1 ? '' : 's'} made`}
+          /* ── Drawer header (matches ManageUsersDrawer exactly) ── */
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', px: 2, py: '13px', bgcolor: HEADER_BG, borderBottom: 1, borderColor: 'divider' }}>
+            <Stack spacing={0.25} sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="body3" color="text.secondary" component="p" sx={{ letterSpacing: 0.28, textTransform: 'uppercase', fontWeight: 600 }}>
+                {roleNameUpper || 'ROLE'}
               </Typography>
-            </Tooltip>
-            <Button variant="outlined" color="neutral" size="medium" disabled={savePending} onClick={(e: ReactMouseEvent) => discardAndDismiss(e)}>
-              Cancel
-            </Button>
-            <Button variant="contained" color="primary" size="medium" disabled={savePending} onClick={handleSave}>
-              Save
-            </Button>
-          </Fragment>
+              <Typography variant="title3" component="h2" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+                Permissions
+              </Typography>
+            </Stack>
+            <IconButton size="small" variant="outlined" aria-label="Close" onClick={(e: ReactMouseEvent) => dismissPlain(e)}>
+              <Icon name="x" size="sm" />
+            </IconButton>
+          </Box>
         }
       >
-        <Stack spacing={1} sx={{ px: 0, pt: 2, pb: 1 }}>
-          {privilegeSetsDrawerEmptyMessaging ? (
-            <RbacListEmptyPlaceholder roomy {...privilegeSetsDrawerEmptyMessaging} />
-          ) : (
-            rows.map((ps) => (
-                <Accordion
-                  key={ps.id}
-                  disableGutters
-                  elevation={0}
-                  TransitionProps={{ unmountOnExit: true }}
+        {/*
+         * Outer wrapper negates the Drawer body's built-in padding (spacing 3,2 = 24px 16px)
+         * so we can split the area into a scrollable content zone + a truly fixed footer.
+         * height = calc(100% + 48px) restores full body height after the negative vertical margins.
+         */}
+        <Box
+          sx={{
+            mt: -3, mr: -2, mb: -3, ml: -2,
+            height: 'calc(100% + 48px)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {/* ── Scrollable content ───────────────────────────────────── */}
+          <Box sx={{ flex: 1, overflowY: 'auto' }}>
+
+            {/* Role summary */}
+            <Box sx={{ px: 2, pt: 2, pb: 1.5 }}>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: 15 }}>{roleName ?? '—'}</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ px: 1, py: 0.25, borderRadius: 10, bgcolor: 'action.hover', color: 'text.secondary', fontWeight: 600 }}
+                >
+                  {roleName ? (ROLE_DEFAULT_PERMISSIONS[roleName] !== undefined ? 'system' : 'custom') : ''}
+                </Typography>
+              </Stack>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
+                {roleName === 'Admin'   ? 'Manage users, roles, and organization settings' :
+                 roleName === 'Manager' ? 'Manage team members and product resources' :
+                 roleName === 'Member'  ? 'Basic access to assigned products' :
+                 roleName === 'Auditor' ? 'Read-only access to audit logs and reports' : ''}
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.75}>
+                <Box sx={{ color: 'text.disabled', display: 'flex' }}><Icon name="users" size="sm" /></Box>
+                <Typography variant="caption" color="text.secondary">
+                  {roleName === 'Admin' ? 5 : roleName === 'Manager' ? 12 : roleName === 'Member' ? 45 : 3} users with this role
+                </Typography>
+              </Stack>
+            </Box>
+
+            {/* Search bar */}
+            <Box sx={{ px: 2, pt: 0.5, pb: 1.5, bgcolor: 'surface.elevation1' }}>
+              <EnhancedTextField
+                showLabel={false}
+                placeholder="Search permissions"
+                value={search}
+                size="medium"
+                fullWidth
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                slotProps={{
+                  input: {
+                    startAdornment: (
+                      <Box component="span" sx={{ mr: 1, display: 'inline-flex' }}>
+                        <Icon name="magnifying-glass" size="sm" sx={{ opacity: 0.55 }} />
+                      </Box>
+                    ),
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Permission accordions */}
+            <Stack spacing={1.5} sx={{ px: 2, pt: 2, pb: 2 }}>
+              {visibleGroups.map((group) => {
+            const isExpanded = expandedGroups.has(group.id) || !!q
+            const allEnabled = group.permissions.every((p) => enabledPerms.has(p.id))
+
+            return (
+              <Accordion
+                key={group.id}
+                disableGutters
+                elevation={0}
+                expanded={isExpanded}
+                onChange={() => {
+                  if (q) return // keep all open while searching
+                  setExpandedGroups((prev) => {
+                    const next = new Set(prev)
+                    isExpanded ? next.delete(group.id) : next.add(group.id)
+                    return next
+                  })
+                }}
+                TransitionProps={{ unmountOnExit: true }}
+                sx={{
+                  bgcolor: 'background.paper',
+                  border: '1px solid', borderColor: 'divider',
+                  borderRadius: '8px !important',
+                  '&:before': { display: 'none' },
+                  overflow: 'hidden',
+                }}
+              >
+                <AccordionSummary
+                  expandIcon={<Icon name="caret-down" size="sm" />}
                   sx={{
+                    minHeight: 48, px: 2,
                     bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    borderRadius: 1,
-                    '&:before': { display: 'none' },
-                    overflow: 'hidden',
+                    '&.Mui-expanded': { minHeight: 48 },
+                    alignItems: 'center',
+                    '& .MuiAccordionSummary-content': { alignItems: 'center', gap: 1, overflow: 'hidden', mr: 1, flex: 1, margin: 0, '&.Mui-expanded': { margin: 0 } },
+                    '& .MuiAccordionSummary-expandIconWrapper': { display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch' },
                   }}
                 >
-                  <AccordionSummary
-                    expandIcon={<Icon name="caret-down" size="sm" sx={{ flexShrink: 0 }} />}
-                    sx={{
-                      minHeight: 56,
-                      px: 2,
-                      bgcolor: 'background.paper',
-                      '&.Mui-expanded': {
-                        minHeight: 56,
-                        bgcolor: 'background.paper',
-                      },
-                      alignItems: 'center',
-                      '& .MuiAccordionSummary-content': {
-                        alignItems: 'center',
-                        gap: 1,
-                        overflow: 'hidden',
-                        mr: 1,
-                        flex: 1,
-                        margin: 0,
-                        '&.Mui-expanded': { margin: 0 },
-                      },
-                      '& .MuiAccordionSummary-expandIconWrapper': {
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        alignSelf: 'stretch',
-                      },
-                    }}
-                  >
-                    <Stack spacing={0.25} sx={{ flex: 1, minWidth: 0, alignSelf: 'center' }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700 }} noWrap title={ps.privilegeSetName}>
-                        {ps.privilegeSetName}
-                      </Typography>
-                      {ps.description ? (
-                        <Typography variant="caption" color="text.secondary" sx={{ WebkitLineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          {ps.description}
-                        </Typography>
-                      ) : null}
-                    </Stack>
-                    <Stack
-                      direction="row"
-                      spacing={0.5}
-                      alignItems="center"
-                      flexWrap="nowrap"
-                      onClick={(e: ReactMouseEvent) => e.stopPropagation()}
+                  <Typography sx={{ fontWeight: 600, fontSize: 13, flex: 1 }}>
+                    {group.label}
+                  </Typography>
+
+                  {/* Group-level select/deselect button — only visible when expanded */}
+                  {isExpanded && (
+                    <Button
+                      variant="outlined"
+                      color="neutral"
+                      size="small"
+                      onClick={(e: ReactMouseEvent) => { e.stopPropagation(); toggleGroup(group.id, !allEnabled) }}
+                      sx={{ mr: 1, textTransform: 'none', fontWeight: 500, fontSize: 12, flexShrink: 0 }}
                     >
-                      <Tooltip title="Open in new tab" placement="top">
-                        <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', lineHeight: 0 }}>
-                          <IconButton
+                      {allEnabled ? 'Deselect All' : 'Select All'}
+                    </Button>
+                  )}
+                </AccordionSummary>
+
+                <AccordionDetails sx={{ px: 0, pt: 0, pb: 0 }}>
+                  <Divider />
+                  <Stack spacing={0}>
+                    {group.permissions.map((perm, pi) => (
+                      <Box key={perm.id}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.5 }}>
+                          <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Typography sx={{ fontWeight: 600, fontSize: 14, lineHeight: 1.4 }}>{perm.name}</Typography>
+                            <Typography variant="caption" color="text.secondary">{perm.description}</Typography>
+                          </Box>
+                          <Switch
+                            checked={enabledPerms.has(perm.id)}
+                            onChange={() => togglePermission(perm.id)}
                             size="small"
-                            variant="outlined"
-                            aria-label={`Open ${ps.privilegeSetName} in new tab`}
-                            onClick={(e: ReactMouseEvent) => {
-                              e.stopPropagation()
-                              openPrivilegeSetInNewTab(ps.id)
-                            }}
-                          >
-                            <Icon name="arrow-square-out" size="sm" />
-                          </IconButton>
-                        </Box>
-                      </Tooltip>
-                      {tab === 0 ? (
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          size="small"
-                          sx={{ flexShrink: 0, textTransform: 'none', fontWeight: 500 }}
-                          onClick={(e: ReactMouseEvent) => {
-                            e.stopPropagation()
-                            removeIds([ps.id])
-                          }}
-                        >
-                          Remove
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="outlined"
-                          color="primary"
-                          size="small"
-                          sx={{ flexShrink: 0, textTransform: 'none', fontWeight: 500 }}
-                          onClick={(e: ReactMouseEvent) => {
-                            e.stopPropagation()
-                            assignIds([ps.id])
-                          }}
-                        >
-                          Assign
-                        </Button>
-                      )}
-                    </Stack>
-                  </AccordionSummary>
-                  <AccordionDetails
-                    sx={{
-                      px: 2,
-                      pt: 0,
-                      pb: 2,
-                      borderTop: 1,
-                      borderColor: 'divider',
-                      bgcolor: 'background.paper',
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                      Included privileges
-                    </Typography>
-                    <PrivilegeChipsPreview privilegeSetId={ps.id} />
-                  </AccordionDetails>
-                </Accordion>
-              ))
+                            inputProps={{ 'aria-label': perm.name }}
+                          />
+                        </Stack>
+                        {pi < group.permissions.length - 1 && <Divider />}
+                      </Box>
+                    ))}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            )
+          })}
+
+              {visibleGroups.length === 0 && (
+                <Box sx={{ py: 4, textAlign: 'center' }}>
+                  <Typography variant="body2" color="text.disabled">No permissions match "{search}"</Typography>
+                </Box>
+              )}
+            </Stack>
+          </Box>{/* end scrollable content */}
+
+          {/* ── Fixed footer — flex sibling, never scrolls ───────────── */}
+          <Box
+            sx={{
+              flexShrink: 0,
+              borderTop: 1, borderColor: 'divider',
+              bgcolor: 'background.paper',
+              px: 2, py: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              minHeight: 64,
+            }}
+          >
+          {/* Left — Discard Changes, only when pending */}
+          <Box>
+            {totalChanges > 0 && (
+              <Button variant="outlined" color="error" size="medium" disabled={savePending}
+                onClick={() => setEnabledPerms(new Set(committedPerms))}>
+                Discard Changes
+              </Button>
             )}
-        </Stack>
+          </Box>
+
+          {/* Right — change count + Cancel + Save */}
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Tooltip
+              title={totalChanges === 0 ? 'No unsaved changes' : `${totalChanges} change${totalChanges === 1 ? '' : 's'} made`}
+              placement="top"
+            >
+              <Typography variant="body3" color="text.secondary"
+                sx={{ cursor: 'default', maxWidth: 200, whiteSpace: 'nowrap' }} noWrap>
+                {totalChanges === 0 ? 'No changes' : `${totalChanges} change${totalChanges === 1 ? '' : 's'} made`}
+              </Typography>
+            </Tooltip>
+            <Button variant="outlined" color="neutral" size="medium" disabled={savePending}
+              onClick={(e: ReactMouseEvent) => dismissPlain(e)}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="primary" size="medium" disabled={savePending}
+              onClick={handleSave}>
+              Save
+            </Button>
+          </Stack>
+          </Box>{/* end footer */}
+        </Box>{/* end outer wrapper */}
       </Drawer>
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={6500}
-        TransitionComponent={snackbarSlideUp}
+        autoHideDuration={4000}
         onClose={() => setSnackbarOpen(false)}
         message={snackbarMessage}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        TransitionComponent={snackbarSlideUp}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </>
   )

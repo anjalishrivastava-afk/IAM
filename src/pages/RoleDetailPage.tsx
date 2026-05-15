@@ -355,7 +355,7 @@ export function RoleDetailPage({
         if (cancelled) return
         const msg = e instanceof Error ? e.message : String(e)
         if (/role not found/i.test(msg)) {
-          navigate(backToPath ?? '/closed-interaction/user-management', { replace: true })
+          navigate(-1)
           return
         }
         setPageError(msg)
@@ -413,7 +413,8 @@ export function RoleDetailPage({
     setSaveError(null)
   }, [roleId, searchParams])
 
-  const handleBack = () => navigate(backToPath ?? '/closed-interaction/user-management')
+  // navigate(-1) returns to exact previous route — works for both admin and RBAC contexts
+  const handleBack = () => navigate(-1)
 
   const exitEditRevertDrafts = () => {
     if (!row) return
@@ -468,7 +469,7 @@ export function RoleDetailPage({
     closeMenu()
     try {
       await deleteRole(roleId)
-      navigate(backToPath ?? '/closed-interaction/user-management')
+      navigate(-1)
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Delete failed')
     }
@@ -794,6 +795,7 @@ export function RoleDetailPage({
         onClose={() => setManagePrivilegeDrawer(false)}
         privilegeSets={allPrivilegeSets}
         assignedPrivilegeSetIds={detail.privilegeSetIds}
+        roleName={row?.roleName}
         onSave={async (ids) => {
           try {
             await handlePrivilegeSetsSave(ids)

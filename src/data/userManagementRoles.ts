@@ -1,6 +1,6 @@
 /** Row model for RBAC User Management — Roles (HDFC banking context for custom roles). */
 
-export type RoleScopeType = 'default' | 'custom'
+export type RoleScopeType = 'system' | 'default' | 'custom'
 
 export interface UserManagementRoleRow {
   id: string
@@ -12,124 +12,42 @@ export interface UserManagementRoleRow {
   createdAtLabel: string
 }
 
-/** 13 rows: 5 default org roles + 8 HDFC-specific custom roles (branch, wealth, credit, compliance, digital). */
 export const USER_MANAGEMENT_ROLE_ROWS: UserManagementRoleRow[] = [
   {
     id: 'role-1',
     roleName: 'Admin',
-    description: 'Full org-level access',
-    scopeType: 'default',
-    assignedUserCount: 2,
+    description: 'Manage users, roles, and organization settings',
+    scopeType: 'system',
+    assignedUserCount: 5,
     createdBy: 'Aditya Pratap Singh',
     createdAtLabel: 'Apr 11, 12:19',
   },
   {
     id: 'role-2',
-    roleName: 'Supervisor',
-    description: 'Manage agents, monitors queues and SLAs',
-    scopeType: 'default',
+    roleName: 'Manager',
+    description: 'Manage team members and product resources',
+    scopeType: 'custom',
     assignedUserCount: 12,
-    createdBy: 'Rudrakshula Prasad',
+    createdBy: 'Rudrakshula Prasanth',
     createdAtLabel: 'Apr 11, 12:19',
   },
   {
     id: 'role-3',
-    roleName: 'Executive',
-    description: 'Access all agent workspaces & reporting',
-    scopeType: 'default',
-    assignedUserCount: 107,
+    roleName: 'Member',
+    description: 'Basic access to assigned products',
+    scopeType: 'system',
+    assignedUserCount: 45,
     createdBy: 'Rashika Jain',
     createdAtLabel: 'Apr 11, 12:19',
   },
   {
     id: 'role-4',
-    roleName: 'Professional Agent',
-    description: 'Access agent workspace standard tools',
-    scopeType: 'default',
-    assignedUserCount: 20,
+    roleName: 'Auditor',
+    description: 'Read-only access to audit logs and reports',
+    scopeType: 'custom',
+    assignedUserCount: 3,
     createdBy: 'Anjali Srivastava',
     createdAtLabel: 'Apr 11, 12:19',
-  },
-  {
-    id: 'role-5',
-    roleName: 'Analyst',
-    description: 'Access analytics, reporting and exports',
-    scopeType: 'default',
-    assignedUserCount: 8,
-    createdBy: 'Aditya Pratap Singh',
-    createdAtLabel: 'Apr 11, 12:19',
-  },
-  {
-    id: 'role-6',
-    roleName: 'HDFC Floor Manager',
-    description: 'Custom role for floor oversight, intraday rostering and escalation',
-    scopeType: 'custom',
-    assignedUserCount: 4,
-    createdBy: 'Rudrakshula Prasad',
-    createdAtLabel: 'Apr 11, 12:19',
-  },
-  {
-    id: 'role-7',
-    roleName: 'HDFC Branch Banking Lead',
-    description: 'Manages branch-tier user access, lockers and teller-assist workflows',
-    scopeType: 'custom',
-    assignedUserCount: 6,
-    createdBy: 'Rashika Jain',
-    createdAtLabel: 'Apr 10, 09:42',
-  },
-  {
-    id: 'role-8',
-    roleName: 'HDFC Wealth RM (HNI)',
-    description: 'Dedicated relationship tools for priority & private banking portfolios',
-    scopeType: 'custom',
-    assignedUserCount: 14,
-    createdBy: 'Anjali Srivastava',
-    createdAtLabel: 'Apr 9, 16:05',
-  },
-  {
-    id: 'role-9',
-    roleName: 'HDFC Retail Loan Underwriter',
-    description: 'Credit memos, LOS integration and retail loan decisioning read/write',
-    scopeType: 'custom',
-    assignedUserCount: 9,
-    createdBy: 'Kiran Deshpande',
-    createdAtLabel: 'Apr 9, 11:18',
-  },
-  {
-    id: 'role-10',
-    roleName: 'HDFC AML & Fraud Analyst',
-    description: 'Sanctions screening, STR preparation and case management',
-    scopeType: 'custom',
-    assignedUserCount: 11,
-    createdBy: 'Priya Nambiar',
-    createdAtLabel: 'Apr 8, 14:27',
-  },
-  {
-    id: 'role-11',
-    roleName: 'HDFC Omni-Channel Desk Lead',
-    description: 'Blended voice, chat & email routing with channel-specific privilege sets',
-    scopeType: 'custom',
-    assignedUserCount: 7,
-    createdBy: 'Aditya Pratap Singh',
-    createdAtLabel: 'Apr 8, 10:03',
-  },
-  {
-    id: 'role-12',
-    roleName: 'HDFC Digital Journey Specialist',
-    description: 'Guided onboarding, e-KYC assist and paperless account opening',
-    scopeType: 'custom',
-    assignedUserCount: 18,
-    createdBy: 'Rudrakshula Prasad',
-    createdAtLabel: 'Apr 7, 08:55',
-  },
-  {
-    id: 'role-13',
-    roleName: 'HDFC Audit & Compliance Viewer',
-    description: 'Read-only access to interaction logs, QM scorecards and RBI templates',
-    scopeType: 'custom',
-    assignedUserCount: 5,
-    createdBy: 'Rashika Jain',
-    createdAtLabel: 'Apr 6, 17:40',
   },
 ]
 

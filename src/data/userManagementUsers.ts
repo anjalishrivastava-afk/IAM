@@ -1,3 +1,5 @@
+export type UserStatus = 'Active' | 'Inactive' | 'Invited'
+
 /** Row for the User Management » Users directory grid (GET /api/users). */
 export type UserManagementDirectoryRow = {
   id: string
@@ -13,4 +15,10 @@ export type UserManagementDirectoryRow = {
   campaigns: string | null
   /** Organizational groups (Groups column). */
   groups: string[]
+  // IAM-design new fields (augmented client-side for prototype)
+  status?: UserStatus
+  tenants?: string[]
+  products?: string[]
+  mfa?: boolean
+  lastActive?: string
 }

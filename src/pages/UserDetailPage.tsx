@@ -50,7 +50,7 @@ const USER_DETAIL_PAIR_FIELD_SX = {
   maxWidth: { xs: '100%', md: 'calc(50% - 8px)' },
 } as const
 
-const BACK_PATH = '/closed-interaction/user-management'
+const BACK_PATH = '/closed-interaction/user-management' // used only as fallback for invalid userId redirects
 
 function userHandle(row: UserManagementDirectoryRow): string {
   const em = row.email?.trim()
@@ -148,7 +148,8 @@ export function UserDetailPage() {
     }
   }, [userId])
 
-  const handleBack = useCallback(() => navigate(BACK_PATH), [navigate])
+  // navigate(-1) returns to exact previous route in history — works for both admin and RBAC contexts
+  const handleBack = useCallback(() => navigate(-1), [navigate])
 
   const handleMenuOpen = (e: ReactMouseEvent<HTMLElement>) => {
     setMenuAnchorEl(e.currentTarget)

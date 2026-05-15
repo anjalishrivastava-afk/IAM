@@ -756,10 +756,7 @@ export function PrivilegeSetDetailPage() {
         if (cancelled) return
         const msg = e instanceof Error ? e.message : String(e)
         if (/privilege set not found/i.test(msg)) {
-          navigate('/closed-interaction/user-management', {
-            replace: true,
-            state: { umMainTab: 'privileges' },
-          })
+          navigate(-1)
           return
         }
         setPageError(msg)
@@ -905,8 +902,8 @@ export function PrivilegeSetDetailPage() {
     return { granted, total }
   }, [detail, grantByPermissionId])
 
-  const handleBack = () =>
-    navigate('/closed-interaction/user-management', { state: { umMainTab: 'privileges' } })
+  // navigate(-1) returns to exact previous route — works for both admin and RBAC contexts
+  const handleBack = () => navigate(-1)
 
   const openMenu = (e: ReactMouseEvent<HTMLElement>) => setMenuAnchorEl(e.currentTarget)
   const closeMenu = () => setMenuAnchorEl(null)
@@ -980,7 +977,7 @@ export function PrivilegeSetDetailPage() {
     closeMenu()
     try {
       await deletePrivilegeSet(privilegeSetId)
-      navigate('/closed-interaction/user-management', { state: { umMainTab: 'privileges' } })
+      navigate(-1)
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : 'Delete failed')
     }

@@ -24,6 +24,8 @@ import { SignInPage } from './pages/SignInPage'
 import { SignUpPage } from './pages/SignUpPage'
 import { AdminLayout } from './layout/AdminLayout'
 import { AdminUserManagementPage } from './pages/admin/AdminUserManagementPage'
+import { LicenseManagementPage } from './pages/admin/LicenseManagementPage'
+import { CreateUserPage } from './pages/admin/CreateUserPage'
 import { SignupScreen } from './pages/SignupScreen'
 import { RoleStep } from './pages/onboarding/RoleStep'
 import { NeedStep } from './pages/onboarding/NeedStep'
@@ -39,9 +41,17 @@ export default function App() {
       <Route path="/onboarding/need" element={<NeedStep />} />
       <Route path="/onboarding/personalize" element={<PersonalizeStep />} />
       <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<Navigate to="/admin/user-management" replace />} />
-        <Route path="/admin/user-management" element={<UserManagementPage />} />
+        <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+        {/* Different keys force full remount on path change so useState initializer re-runs */}
+        <Route path="/admin/users" element={<UserManagementPage hideSecondaryNav key="admin-users" />} />
+        <Route path="/admin/user-management" element={<UserManagementPage hideSecondaryNav key="admin-roles" />} />
         <Route path="/admin/overview" element={<AdminUserManagementPage />} />
+        <Route path="/admin/license-management" element={<LicenseManagementPage />} />
+        <Route path="/admin/users/create" element={<CreateUserPage />} />
+        {/* Detail pages — open inline within AdminLayout; back navigates to previous table */}
+        <Route path="/admin/users/:userId" element={<UserDetailPage />} />
+        <Route path="/admin/roles/:roleId" element={<RoleDetailPage />} />
+        <Route path="/admin/privilege-sets/:privilegeSetId" element={<PrivilegeSetDetailPage />} />
       </Route>
       <Route element={<RequireAuth />}>
         <Route path="/rbac-ui-impact/pattern/stepper" element={<PatternStepperRoleDemoPage />} />
