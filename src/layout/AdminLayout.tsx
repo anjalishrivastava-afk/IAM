@@ -17,12 +17,12 @@ const ADMIN_NAV: AdminNavEntry[] = [
   {
     id: 'user-management', icon: 'users', label: 'User Management',
     children: [
-      { id: 'users',            icon: 'user',        label: 'Users',                path: '/admin/users',           state: { adminSection: 'users'  } },
-      { id: 'groups',           icon: 'users-three', label: 'Groups',               path: '/admin/groups' },
-      { id: 'roles-privileges', icon: 'shield-check', label: 'Roles and Privileges', path: '/admin/user-management', state: { adminSection: 'roles'  } },
+      { id: 'users',            icon: 'user',                  label: 'Users',                path: '/admin/users',                state: { adminSection: 'users'  } },
+      { id: 'groups',           icon: 'users-three',           label: 'Groups',               path: '/admin/groups' },
+      { id: 'roles-privileges', icon: 'shield-check',          label: 'Roles and Privileges', path: '/admin/user-management',      state: { adminSection: 'roles'  } },
+      { id: 'license',          icon: 'identification-badge',  label: 'License Management',   path: '/admin/license-management' },
     ],
   },
-  { id: 'license-management', icon: 'identification-badge', label: 'License Management',    path: '/admin/license-management' },
   { id: 'resource-registry',  icon: 'cube',                  label: 'Resource Registry',     path: '/admin/resource-registry'  },
   { id: 'org-settings',       icon: 'buildings',             label: 'Organisation Settings', path: '/admin/org-settings'       },
   { id: 'api-keys',           icon: 'key',                   label: 'API Keys',              path: '/admin/api-keys'           },
@@ -171,13 +171,22 @@ function AdminSidebar({ selectedItem, onSelect }: { selectedItem: string; onSele
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 
+function deriveSelectedFromPath(pathname: string): string {
+  if (pathname.startsWith('/admin/license-management')) return 'license'
+  if (pathname.startsWith('/admin/user-management'))    return 'roles-privileges'
+  if (pathname.startsWith('/admin/groups'))             return 'groups'
+  if (pathname.startsWith('/admin/resource-registry'))  return 'resource-registry'
+  if (pathname.startsWith('/admin/org-settings'))       return 'org-settings'
+  if (pathname.startsWith('/admin/api-keys'))           return 'api-keys'
+  if (pathname.startsWith('/admin/sso-configuration'))  return 'sso-configuration'
+  return 'users'
+}
+
 export function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Derive default selected item from current path
-  const defaultSelected = location.pathname === '/admin/user-management' ? 'roles-privileges' : 'users'
-  const [selectedItem, setSelectedItem] = useState(defaultSelected)
+  const [selectedItem, setSelectedItem] = useState(() => deriveSelectedFromPath(location.pathname))
 
   const handleLogout = () => {
     clearPlaygroundSession()
