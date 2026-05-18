@@ -37,7 +37,6 @@ function isSection(entry: AdminNavEntry): entry is NavSection {
 
 function AdminSidebar({ selectedItem, onSelect }: { selectedItem: string; onSelect: (id: string) => void }) {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState<'auth' | 'admin'>('admin')
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['user-management']))
   const [search, setSearch] = useState('')
 
@@ -76,27 +75,6 @@ function AdminSidebar({ selectedItem, onSelect }: { selectedItem: string; onSele
           }}
         />
       </Box>
-
-      {/* Auth Screens / Admin Portal tabs */}
-      <Stack direction="row" spacing={0.5} sx={{ px: 1.5, pb: 1, borderBottom: '1px solid', borderColor: 'divider' }}>
-        {(['auth', 'admin'] as const).map((tab) => (
-          <Box
-            key={tab}
-            onClick={() => { setActiveTab(tab); if (tab === 'auth') navigate('/') }}
-            sx={(theme: Theme) => ({
-              flex: 1, py: 0.6, px: 1, textAlign: 'center',
-              borderRadius: 1, cursor: 'pointer',
-              bgcolor: activeTab === tab ? alpha(theme.palette.primary.main, 0.08) : 'transparent',
-              border: activeTab === tab ? `1px solid ${theme.palette.primary.light}` : '1px solid transparent',
-              '&:hover': { bgcolor: 'action.hover' },
-            })}
-          >
-            <Typography sx={{ fontSize: 12, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? 'primary.main' : 'text.secondary', lineHeight: 1.4 }}>
-              {tab === 'auth' ? 'Auth Screens' : 'Admin Portal'}
-            </Typography>
-          </Box>
-        ))}
-      </Stack>
 
       {/* Nav items */}
       <Box sx={{ flex: 1, overflowY: 'auto', py: 1 }}>
