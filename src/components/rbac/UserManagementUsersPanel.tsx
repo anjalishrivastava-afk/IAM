@@ -524,7 +524,7 @@ export function UserManagementUsersPanel({ rows, loadError, onRetryLoad }: UserM
 
               {/* Export */}
               <Button variant="outlined" color="neutral" size="medium" disableElevation
-                startIcon={<Icon name="export" size="sm" />}
+                startIcon={<Icon name="download-simple" size="sm" />}
                 onClick={() => setSnack('Export not wired in prototype.')}
                 sx={(t: Theme) => ({ textTransform: 'none', fontWeight: t.typography.fontWeightMedium, fontSize: t.typography.pxToRem(14), px: t.spacing(2), py: `${10}px`, minHeight: 40, borderRadius: t.spacing(1) })}
               >
