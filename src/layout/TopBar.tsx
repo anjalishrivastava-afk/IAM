@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Box, Icon, IconButton, Stack, Typography } from '@exotel-npm-dev/signal-design-system'
 import { Popover } from '@mui/material'
@@ -6,9 +7,10 @@ import { useOnboarding } from '../context/OnboardingContext'
 
 // ─── Switch Application dropdown ─────────────────────────────────────────────
 
-const APPS = [
+const APPS: { label: string; route?: string; bg: string; icon: React.ReactNode }[] = [
   {
     label: 'Contact Centre',
+    route: '/contact-centre',
     bg: '#7C3AED',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -134,7 +136,7 @@ function AppLauncherDropdown() {
           {APPS.map(app => (
             <Box
               key={app.label}
-              onClick={() => setAnchor(null)}
+              onClick={() => app.route ? handleNav(app.route) : setAnchor(null)}
               sx={{
                 display: 'flex', alignItems: 'center', gap: 1.5,
                 px: 1.5, py: 1, cursor: 'pointer', borderRadius: 1, mx: 0.5,

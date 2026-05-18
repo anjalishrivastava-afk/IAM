@@ -11,6 +11,7 @@ import { RoleDetailPage } from './pages/RoleDetailPage'
 import { UserDetailPage } from './pages/UserDetailPage'
 import { ExampleSettingsPage } from './pages/ExampleSettingsPage'
 import { HomePage } from './pages/HomePage'
+import { ContactCentrePage } from './pages/ContactCentrePage'
 import {
   PatternCampaignMultiActionDemoPage,
 } from './pages/rbacUiImpact/PatternCampaignMultiActionDemoPage'
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/admin/privilege-sets/:privilegeSetId" element={<PrivilegeSetDetailPage />} />
       </Route>
       <Route element={<RequireAuth />}>
+        <Route path="/contact-centre" element={<ContactCentrePage />} />
         <Route path="/rbac-ui-impact/pattern/stepper" element={<PatternStepperRoleDemoPage />} />
         <Route element={<AppLayout />}>
           <Route path="/" element={<HomePage />} />
