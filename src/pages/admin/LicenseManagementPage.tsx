@@ -111,7 +111,7 @@ const PRODUCTS: ProductLicense[] = [
   },
   {
     id: 'exolite',
-    name: 'Exolite',
+    name: 'Contact Center',
     expiry: '15/04/2025 (16 days)',
     status: 'expiring-soon',
     seats: { used: 75, total: 100 },
