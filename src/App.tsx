@@ -37,6 +37,7 @@ import { AdminHomePage } from './pages/AdminHomePage'
 import { DeveloperHomePage } from './pages/DeveloperHomePage'
 import { AgentHomePage } from './pages/AgentHomePage'
 import { SupervisorHomePage } from './pages/SupervisorHomePage'
+import { VoicebotPage } from './pages/VoicebotPage'
 import { HomeLayout } from './layout/HomeLayout'
 
 export default function App() {
@@ -76,6 +77,9 @@ export default function App() {
         </Route>
         <Route path="/supervisor" element={<HomeLayout />}>
           <Route index element={<SupervisorHomePage />} />
+        </Route>
+        <Route path="/voicebot"   element={<HomeLayout />}>
+          <Route index element={<VoicebotPage />} />
         </Route>
 
         <Route path="/contact-centre" element={<ContactCentrePage />} />
