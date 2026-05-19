@@ -31,6 +31,13 @@ import { SignupScreen } from './pages/SignupScreen'
 import { RoleStep } from './pages/onboarding/RoleStep'
 import { NeedStep } from './pages/onboarding/NeedStep'
 import { PersonalizeStep } from './pages/onboarding/PersonalizeStep'
+import { DevApiStep } from './pages/onboarding/DevApiStep'
+import { DevEnvStep } from './pages/onboarding/DevEnvStep'
+import { AdminHomePage } from './pages/AdminHomePage'
+import { DeveloperHomePage } from './pages/DeveloperHomePage'
+import { AgentHomePage } from './pages/AgentHomePage'
+import { SupervisorHomePage } from './pages/SupervisorHomePage'
+import { HomeLayout } from './layout/HomeLayout'
 
 export default function App() {
   return (
@@ -41,6 +48,8 @@ export default function App() {
       <Route path="/onboarding/role" element={<RoleStep />} />
       <Route path="/onboarding/need" element={<NeedStep />} />
       <Route path="/onboarding/personalize" element={<PersonalizeStep />} />
+      <Route path="/onboarding/dev/api" element={<DevApiStep />} />
+      <Route path="/onboarding/dev/env" element={<DevEnvStep />} />
       <Route element={<AdminLayout />}>
         <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
         {/* Different keys force full remount on path change so useState initializer re-runs */}
@@ -55,6 +64,20 @@ export default function App() {
         <Route path="/admin/privilege-sets/:privilegeSetId" element={<PrivilegeSetDetailPage />} />
       </Route>
       <Route element={<RequireAuth />}>
+        {/* Role-specific home pages — TopBar only, no sidebar */}
+        <Route path="/home"       element={<HomeLayout />}>
+          <Route index element={<AdminHomePage />} />
+        </Route>
+        <Route path="/agent"      element={<HomeLayout />}>
+          <Route index element={<AgentHomePage />} />
+        </Route>
+        <Route path="/developer"  element={<HomeLayout />}>
+          <Route index element={<DeveloperHomePage />} />
+        </Route>
+        <Route path="/supervisor" element={<HomeLayout />}>
+          <Route index element={<SupervisorHomePage />} />
+        </Route>
+
         <Route path="/contact-centre" element={<ContactCentrePage />} />
         <Route path="/rbac-ui-impact/pattern/stepper" element={<PatternStepperRoleDemoPage />} />
         <Route element={<AppLayout />}>
@@ -85,8 +108,9 @@ export default function App() {
           <Route path="/example-4/child-2" element={<MainContent label="example 4 child 2" />} />
           <Route path="/app-1" element={<MainContent label="app 1" />} />
           <Route path="/app-2" element={<MainContent label="app 2" />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
+        {/* Catch-all — outside AppLayout so role routes are never affected */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   )

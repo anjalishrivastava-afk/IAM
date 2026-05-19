@@ -34,7 +34,7 @@ export function SignupScreen() {
   const navigate = useNavigate()
   const { toggleMode } = useThemeMode()
   const brandLogo = useLoadDataByTheme(brandLogoDark, brandLogoLight)
-  const { setFirstName } = useOnboarding()
+  const { resetOnboarding } = useOnboarding()
 
   const [name, setName] = useState('Riti Singh')
   const [company, setCompany] = useState('')
@@ -49,7 +49,8 @@ export function SignupScreen() {
   }
 
   const handleProceed = () => {
-    setFirstName(name.trim().split(' ')[0] || name.trim())
+    const firstName = name.trim().split(' ')[0] || name.trim()
+    resetOnboarding(firstName)
     navigate('/onboarding/role')
   }
 

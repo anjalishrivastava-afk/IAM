@@ -22,6 +22,7 @@ import {
   isPlaygroundAuthenticated,
   setPlaygroundAuthenticated,
   validatePlaygroundCredentials,
+  getHomeRoute,
 } from '../auth/playgroundSession'
 
 const LANG_FLAG =
@@ -54,7 +55,7 @@ export function SignInPage() {
   const [error, setError] = useState(false)
 
   if (isPlaygroundAuthenticated()) {
-    return <Navigate to="/" replace />
+    return <Navigate to={getHomeRoute()} replace />
   }
 
   const onSubmit = (e: React.FormEvent) => {
@@ -62,7 +63,7 @@ export function SignInPage() {
     setError(false)
     if (validatePlaygroundCredentials(email, password)) {
       setPlaygroundAuthenticated()
-      navigate('/', { replace: true })
+      navigate(getHomeRoute(), { replace: true })
       return
     }
     setError(true)

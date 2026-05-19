@@ -5,22 +5,17 @@ import { Stepper } from '../../components/onboarding/Stepper'
 import { TeamSizeChip, IndustryChip } from '../../components/onboarding/SelectionCard'
 import { useOnboarding } from '../../context/OnboardingContext'
 import { SCREEN4_COPY, TEAM_SIZES, INDUSTRIES } from '../../lib/onboardingCopy'
-import { setPlaygroundAuthenticated } from '../../auth/playgroundSession'
+import { setPlaygroundAuthenticated, roleHomeMap } from '../../auth/playgroundSession'
 
 export function PersonalizeStep() {
   const navigate = useNavigate()
-  const { firstName, teamSize, industry, setTeamSize, setIndustry } = useOnboarding()
+  const { firstName, role, teamSize, industry, setTeamSize, setIndustry } = useOnboarding()
 
   const canProceed = teamSize !== null && industry !== null
 
-  const handleNext = () => {
+  const handleFinish = () => {
     setPlaygroundAuthenticated()
-    navigate('/', { replace: true })
-  }
-
-  const handleSkip = () => {
-    setPlaygroundAuthenticated()
-    navigate('/', { replace: true })
+    navigate(roleHomeMap[role ?? ''] ?? '/', { replace: true })
   }
 
   return (
@@ -112,7 +107,7 @@ export function PersonalizeStep() {
               fullWidth
               disabled={!canProceed}
               aria-disabled={!canProceed}
-              onClick={handleNext}
+              onClick={handleFinish}
             >
               {SCREEN4_COPY.cta}
             </Button>
@@ -120,7 +115,7 @@ export function PersonalizeStep() {
               component="button"
               type="button"
               underline="hover"
-              onClick={handleSkip}
+              onClick={handleFinish}
               sx={{
                 fontSize: 14, fontWeight: 500, color: 'text.primary',
                 cursor: 'pointer', bgcolor: 'transparent', border: 0, p: 0, fontFamily: 'inherit',

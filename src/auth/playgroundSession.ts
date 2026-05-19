@@ -1,11 +1,31 @@
 const SESSION_KEY = 'exotel-playground-authenticated'
 
-/** Design sign-in: email and password both specified as Exotel (case per field below). */
+export const roleHomeMap: Record<string, string> = {
+  admin:      '/home',
+  agent:      '/agent',
+  developer:  '/developer',
+  supervisor: '/supervisor',
+}
+
+/** Read role from the onboarding blob that OnboardingContext already saves. */
+function readRoleFromStorage(): string | null {
+  try {
+    const raw = localStorage.getItem('exotel-onboarding')
+    if (!raw) return null
+    return (JSON.parse(raw) as { role?: string }).role ?? null
+  } catch {
+    return null
+  }
+}
+
+export function getHomeRoute(): string {
+  const role = readRoleFromStorage()
+  return roleHomeMap[role ?? ''] ?? '/'
+}
+
 export function validatePlaygroundCredentials(email: string, password: string): boolean {
   const e = email.trim().toLowerCase()
-  const okEmail = e === 'exotel'
-  const okPassword = password === 'Exotel'
-  return okEmail && okPassword
+  return e === 'exotel' && password === 'Exotel'
 }
 
 export function isPlaygroundAuthenticated(): boolean {
