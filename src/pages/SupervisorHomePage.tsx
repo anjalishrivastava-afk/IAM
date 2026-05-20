@@ -16,12 +16,12 @@ import { useOnboarding } from '../context/OnboardingContext'
 // ─── Static data ──────────────────────────────────────────────────────────────
 
 const SUGGESTED_CHIPS = [
-  { label: 'How many agents are online?',   bg: 'success.main'  },
-  { label: 'Show team performance today',   bg: 'primary.main'  },
-  { label: 'View customers waiting',        bg: 'warning.main'  },
-  { label: 'Generate a weekly report',      bg: 'info.main'     },
-  { label: 'Monitor a live call',           bg: 'primary.dark'  },
-  { label: 'View SLA breach risk',          bg: 'error.main'    },
+  { label: 'How many agents are online?',    bg: 'success.main'  },
+  { label: 'Show team performance today',    bg: 'primary.main'  },
+  { label: 'View customers waiting',         bg: 'warning.main'  },
+  { label: 'Generate a weekly report',       bg: 'info.main'     },
+  { label: 'Monitor a live call',            bg: 'primary.dark'  },
+  { label: 'View SLA breach risk',           bg: 'error.main'    },
 ]
 
 const QUICK_ACCESS_ITEMS = [
@@ -39,19 +39,19 @@ const TAG_COLOR: Record<AgentStatus, 'success' | 'warning' | 'secondary'> = {
 }
 
 const AGENTS = [
-  { id: 'a1', icon: 'user', name: 'Rahul Sharma',  status: 'Online'   as AgentStatus, description: 'Handling: Priya Nair (Voice) · 3m 22s'      },
-  { id: 'a2', icon: 'user', name: 'Deepa Pillai',  status: 'Online'   as AgentStatus, description: 'Handling: Suresh Kumar (Chat) · 1m 07s'      },
-  { id: 'a3', icon: 'user', name: 'Amit Verma',    status: 'On Break' as AgentStatus, description: 'Break since 2:15 PM · expected back in 5m'   },
-  { id: 'a4', icon: 'user', name: 'Sneha Rao',     status: 'Online'   as AgentStatus, description: 'Handling: Karan Mehta (WhatsApp) · 0m 44s'   },
-  { id: 'a5', icon: 'user', name: 'Kiran Bhat',    status: 'Offline'  as AgentStatus, description: 'Last seen: 1:48 PM'                           },
-  { id: 'a6', icon: 'user', name: 'Meena Iyer',    status: 'Online'   as AgentStatus, description: 'Available · waiting for next interaction'     },
+  { id: 'a1', icon: 'user', name: 'Rahul Sharma',  status: 'Online'   as AgentStatus, description: 'Handling: Priya Nair (Voice) · 3m 22s'        },
+  { id: 'a2', icon: 'user', name: 'Deepa Pillai',  status: 'Online'   as AgentStatus, description: 'Handling: Suresh Kumar (Chat) · 1m 07s'        },
+  { id: 'a3', icon: 'user', name: 'Amit Verma',    status: 'On Break' as AgentStatus, description: 'Break since 2:15 PM · expected back in 5m'     },
+  { id: 'a4', icon: 'user', name: 'Sneha Rao',     status: 'Online'   as AgentStatus, description: 'Handling: Karan Mehta (WhatsApp) · 0m 44s'     },
+  { id: 'a5', icon: 'user', name: 'Kiran Bhat',    status: 'Offline'  as AgentStatus, description: 'Last seen: 1:48 PM'                             },
+  { id: 'a6', icon: 'user', name: 'Meena Iyer',    status: 'Online'   as AgentStatus, description: 'Available · waiting for next interaction'       },
 ]
 
 const CHECKLIST = [
-  { label: 'Review today\'s queue metrics',   time: '2 min'  },
-  { label: 'Check SLA compliance status',     time: '3 min'  },
-  { label: 'Assign agent break schedules',    time: '5 min'  },
-  { label: 'Approve pending escalations',     time: '10 min' },
+  { label: 'Review today\'s queue metrics',  time: '2 min'  },
+  { label: 'Check SLA compliance status',    time: '3 min'  },
+  { label: 'Assign agent break schedules',   time: '5 min'  },
+  { label: 'Approve pending escalations',    time: '10 min' },
 ]
 
 const DEFAULT_RECS = ['Review CSAT scores by agent', 'Adjust queue routing rules']
@@ -61,7 +61,7 @@ const CARD_SX = {
   borderRadius: 2,
   border: '1px solid',
   borderColor: 'divider',
-  bgcolor: '#F1F1F1',
+  bgcolor: 'background.paper',
   overflow: 'hidden',
 } as const
 
@@ -215,7 +215,7 @@ function QuickAccessSection() {
   )
 }
 
-// ─── Agent Overview ───────────────────────────────────────────────────────────
+// ─── Agent Overview (same card style as Admin Products) ──────────────────────
 
 function AgentOverviewSection() {
   return (

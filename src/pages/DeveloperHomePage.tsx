@@ -67,7 +67,7 @@ const CARD_SX = {
   borderRadius: 2,
   border: '1px solid',
   borderColor: 'divider',
-  bgcolor: '#F1F1F1',
+  bgcolor: 'background.paper',
   overflow: 'hidden',
 } as const
 
